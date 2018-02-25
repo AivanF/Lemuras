@@ -4,7 +4,6 @@ Sometimes you cannot or don't want to use Pandas or similar advanced tool for da
 
 Again, this library may be considered as a simplified analogue of Pandas, but not as a replacement. However, Lemuras is capable of processing an operation on a few tables with several thousands of rows in less than a second.
 
-
 ## Features
 
 - Integration with *Jupyter IPython Notebook*: Lemuras objects are printed as nice tables.
@@ -15,6 +14,8 @@ Again, this library may be considered as a simplified analogue of Pandas, but no
 - **Grouping by** *none*, *one*, or *multiple columns*, **aggregation** with *built-in* or *user-defined functions and lambdas*.
 - **Merge** (**Join**): *inner / left / right / outer*.
 - **Pivot tables** creation.
+
+It was tasted on both Python **2.7.13** and Python **3.6.0**.
 
 
 ## Examples
