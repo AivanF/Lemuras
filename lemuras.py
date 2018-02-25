@@ -1,7 +1,7 @@
 __author__ = 'AivanF'
 __copyright__ = 'Copyright 2018, AivanF'
 __contact__ = 'aivanf@mail.ru'
-__version__ = '1.0.4'
+__version__ = '1.0.5'
 __license__ = """License:
  This software is provided 'as-is', without any express or implied warranty.
  You may not hold the author liable.
@@ -818,7 +818,7 @@ class Table(object):
             if hiddencols:
                     res += '</th><th>...'
             res += '</th></tr>'
-        res += '<table>'
+        res += '</table>'
         return res
 
     def _repr_html_(self):
