@@ -4,6 +4,8 @@ Sometimes you cannot or don't want to use Pandas or similar advanced tool for da
 
 Again, this library may be considered as a simplified analogue of Pandas, but not as a replacement. However, Lemuras is capable of processing an operation on a few tables with several thousands of rows in less than a second.
 
+![logo](http://www.aivanf.com/static/cv/lemuras.png)
+
 ## Features
 
 - Integration with *Jupyter IPython Notebook*: Lemuras objects are printed as nice tables.
