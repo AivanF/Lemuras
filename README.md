@@ -40,6 +40,11 @@ In addition, there is one complex example of solving a real-life problem:
 The code of Lemuras is well-commented, so, you can find useful information there. Contributions are welcome.
 
 
+## ToDos
+
+- Add `.nunique()` method.
+- Add `.value_counts()` method.
+
 ## License
 
  This software is provided 'as-is', without any express or implied warranty.
