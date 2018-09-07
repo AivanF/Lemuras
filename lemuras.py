@@ -1,7 +1,7 @@
 __author__ = 'AivanF'
 __copyright__ = 'Copyright 2018, AivanF'
 __contact__ = 'aivanf@mail.ru'
-__version__ = '1.1.2'
+__version__ = '1.1.4'
 __license__ = """License:
  This software is provided 'as-is', without any express or implied warranty.
  You may not hold the author liable.
@@ -150,8 +150,8 @@ class Column(object):
 		self.title = title
 
 	@classmethod
-	def make(cls, size, value=None, title='-'):
-		return Column([value] * size, title)
+	def make(cls, size, values=None, title='-'):
+		return Column([values] * size, title)
 
 	def get_type(self):
 		"""Returns column type and max symbols length."""
@@ -228,6 +228,16 @@ class Column(object):
 	def nunique(self):
 		"""Returns number of unique values."""
 		return len(set(self.values))
+
+	def apply(self, task):
+		"""Returns new column with applied lambda or function to all the values.
+		The argument must be a function or a lambda expression."""
+		res = []
+		for i in range(len(self.values)):
+			# self.values[i] = task(self.values[i])
+			res.append(task(self.values[i]))
+		# return self
+		return Column(res)
 
 	def _repr_html_(self):
 		n = len(self.values)
@@ -721,6 +731,124 @@ class Table(object):
 				f.write(res)
 		return res
 
+	def to_sql_create(self):
+		def sql_type(tp, ln):
+			if tp == 'i':
+				if ln < 4:
+					return 'int(1)'
+				elif ln < 6:
+					return 'int(2)'
+				elif ln < 9:
+					return 'int(3)'
+				elif ln < 11:
+					return 'int(4)'
+				else:
+					return 'int(8)'
+			if tp == 'f':
+				return 'float'
+			if tp == 'd':
+				return 'date'
+			if tp == 't':
+				return 'datetime'
+			return 'varchar(' + str(ln) + ')'
+
+		self.find_types()
+		res = 'CREATE TABLE `' + self.title + '` ('
+		firstrow = True
+		for row in self.types.rows:
+			if firstrow:
+				firstrow = False
+				res += '\n'
+			else:
+				res += ',\n'
+			res += '  `' + row[0] + '` ' + sql_type(row[1], row[2])
+		res += '\n) ;'
+		return res
+
+	def to_sql_values(self):
+		if self.types is None:
+			self.find_types()
+		if self.rowcnt < 1:
+			return ''
+		res = "INSERT INTO `" + self.title + "` VALUES "
+		firstrow = True
+		for row in self.rows:
+			if firstrow:
+				firstrow = False
+			else:
+				res += ', '
+			firstcell = True
+			res += "("
+			for i in range(self.colcnt):
+				if firstcell:
+					firstcell = False
+				else:
+					res += ","
+				ctp = self.types.cell(1, i)
+				if ctp == 's' or ctp == 'm' or ctp == 'd' or ctp == 't':
+					res += "'" + str(row[i]) + "'"
+				else:
+					res += str(row[i])
+			res += ")"
+		res += ';'
+		return res
+
+	@classmethod
+	def from_sql_create(cls, data):
+		data = data.replace('\n', ' ')
+		title = list(filter(lalepo, data.split('(')[0].split(' ')))[-1]
+		title = title.replace('`', '')
+		cols = []
+		rows = []
+		b = data.find('(') + 1
+		tps = data[b:].split(',')
+		for el in tps:
+			ch = el.lower()
+			if (' int' in ch) or (' float' in ch) or (' date' in ch) or (' text' in ch) or ('char(' in ch):
+				# print("- Column is here!")
+				# print(ch)
+				cols.append(list(filter(lalepo, el.split(' ')))[0].replace('`', ''))
+		return Table(cols, rows, title)
+
+	@classmethod
+	def from_sql_result(cls, data, empty=None, preprocess=True):
+		data = data.replace(' ', '')
+		data = data.replace('-', '')
+		if data[0] == '+':
+			data = data[data.find('\n') + 1:]
+		cols = data[:data.find('\n')]
+		cols = cols.split('|')[1:-1]
+		data = data[data.find('\n') + 1:]
+		data = data.split('\n')[1:-1]
+		rows = []
+		for ln in data:
+			cur = ln.split('|')[1:-1]
+			if preprocess:
+					cur = parse_row(cur, empty=empty)
+			rows.append(cur)
+		return Table(cols, rows)
+
+	def add_sql_values(self, data, empty=None):
+		p = re.compile("(\d+|\'.*?\')\s*,?")
+		def cutstr(x):
+			if len(x) > 1:
+				if x[0] == "'" and x[-1] == "'":
+					return x[1:-1]
+			return x
+		while True:
+			b = data.find('(') + 1
+			e = data.find(')')
+			if b > 0 and e > b:
+				# cur = data[b:e].replace("'", '').split(',')
+				cur = p.findall(data[b:e])
+				cur = list(map(cutstr, cur))
+				cur = parse_row(cur, empty=empty)
+				self.add_row(cur)
+				data = data[e+1:]
+				continue
+			else:
+				break
+
 	@classmethod
 	def from_json(cls, data):
 		data = json.loads(data)
@@ -901,106 +1029,6 @@ class Table(object):
 			rows.append((el, tp, ln))
 		self.types = Table(['Column', 'Type', 'Symbols'], rows, 'Types')
 		return self.types
-
-	def to_sql_create(self):
-		def sql_type(tp, ln):
-			if tp == 'i':
-				if ln < 4:
-					return 'int(1)'
-				elif ln < 6:
-					return 'int(2)'
-				elif ln < 9:
-					return 'int(3)'
-				elif ln < 11:
-					return 'int(4)'
-				else:
-					return 'int(8)'
-			if tp == 'f':
-				return 'float'
-			if tp == 'd':
-				return 'date'
-			if tp == 't':
-				return 'datetime'
-			return 'varchar(' + str(ln) + ')'
-
-		self.find_types()
-		res = 'CREATE TABLE `' + self.title + '` ('
-		firstrow = True
-		for row in self.types.rows:
-			if firstrow:
-				firstrow = False
-				res += '\n'
-			else:
-				res += ',\n'
-			res += '  `' + row[0] + '` ' + sql_type(row[1], row[2])
-		res += '\n) ;'
-		return res
-
-	def to_sql_values(self):
-		if self.types is None:
-			self.find_types()
-		if self.rowcnt < 1:
-			return ''
-		res = "INSERT INTO `" + self.title + "` VALUES "
-		firstrow = True
-		for row in self.rows:
-			if firstrow:
-				firstrow = False
-			else:
-				res += ', '
-			firstcell = True
-			res += "("
-			for i in range(self.colcnt):
-				if firstcell:
-					firstcell = False
-				else:
-					res += ","
-				ctp = self.types.cell(1, i)
-				if ctp == 's' or ctp == 'm' or ctp == 'd' or ctp == 't':
-					res += "'" + str(row[i]) + "'"
-				else:
-					res += str(row[i])
-			res += ")"
-		res += ';'
-		return res
-
-	@classmethod
-	def from_sql_create(cls, data):
-		data = data.replace('\n', ' ')
-		title = list(filter(lalepo, data.split('(')[0].split(' ')))[-1]
-		title = title.replace('`', '')
-		cols = []
-		rows = []
-		b = data.find('(') + 1
-		tps = data[b:].split(',')
-		for el in tps:
-			ch = el.lower()
-			if (' int' in ch) or (' float' in ch) or (' date' in ch) or (' text' in ch) or ('char(' in ch):
-				# print("- Column is here!")
-				# print(ch)
-				cols.append(list(filter(lalepo, el.split(' ')))[0].replace('`', ''))
-		return Table(cols, rows, title)
-
-	def add_sql_values(self, data, empty=None):
-		p = re.compile("(\d+|\'.*?\')\s*,?")
-		def cutstr(x):
-			if len(x) > 1:
-				if x[0] == "'" and x[-1] == "'":
-					return x[1:-1]
-			return x
-		while True:
-			b = data.find('(') + 1
-			e = data.find(')')
-			if b > 0 and e > b:
-				# cur = data[b:e].replace("'", '').split(',')
-				cur = p.findall(data[b:e])
-				cur = list(map(cutstr, cur))
-				cur = parse_row(cur, empty=empty)
-				self.add_row(cur)
-				data = data[e+1:]
-				continue
-			else:
-				break
 
 	def append(self, other):
 		"""Adds rows from other Table object.
