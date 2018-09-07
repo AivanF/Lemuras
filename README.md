@@ -44,6 +44,8 @@ The code of Lemuras is well-commented, so, you can find useful information there
 
 - Add `.nunique()` method.
 - Add `.value_counts()` method.
+- Add `.apply()` method for columns (now it is in table object).
+- Add quotation marks for string in CSV exporting.
 
 ## License
 
