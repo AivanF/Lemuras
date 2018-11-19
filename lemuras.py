@@ -1,7 +1,7 @@
 __author__ = 'AivanF'
 __copyright__ = 'Copyright 2018, AivanF'
 __contact__ = 'aivanf@mail.ru'
-__version__ = '1.1.4'
+__version__ = '1.1.6'
 __license__ = """License:
  This software is provided 'as-is', without any express or implied warranty.
  You may not hold the author liable.
@@ -52,6 +52,8 @@ def tryFloat(x):
 
 
 def tryDatetime(x):
+	if isinstance(x, datetime):
+		return x
 	try:
 		return datetime.strptime(x[:19], '%Y-%m-%d %H:%M:%S')
 	except:
@@ -64,10 +66,17 @@ def tryDatetime(x):
 
 
 def tryDate(x):
+	if isinstance(x, date):
+		return x
 	try:
-		return datetime.strptime(s[:10], '%Y-%m-%d').date()
+		return datetime.strptime(x[:10], '%Y-%m-%d').date()
 	except:
-		return None
+		pass
+	try:
+		return datetime.strptime(x[:10], '%d/%m/%Y').date()
+	except:
+		pass
+	return None
 
 
 def parse_row(lst, empty=''):
@@ -98,6 +107,7 @@ def repr_cell(x):
 		return str(x)
 	else:
 		return repr(x)
+
 
 def jsonable(o):
 	return isinstance(o, str) or isinstance(o, int) or isinstance(o, float) or isinstance(o, list) or isinstance(o, tuple) or isinstance(o, dict)
@@ -141,6 +151,8 @@ aggfuns = {
 	'sum': sum,
 	'min': min,
 	'max': max,
+	'first': lambda x: x[0] if len(x) > 0 else None,
+	'last': lambda x: x[-1] if len(x) > 0 else None,
 }
 
 
@@ -518,6 +530,7 @@ class Grouped(object):
 	def __init__(self, keys, columns, column_indices):
 		self.keys = keys
 		self.count = len(keys)
+		# {'target_column_name': {'new_column_name': function}}
 		self.fun = None
 
 		# Columns indices of keys in original columns
@@ -527,7 +540,7 @@ class Grouped(object):
 
 		# Columns names of grouped rows
 		self.columns = {}
-		# If old indices should be saved
+		# Whether old indices should be saved
 		self.column_indices = []
 		step = 0
 		for cur in columns:
@@ -592,11 +605,24 @@ class Grouped(object):
 				res.append(v)
 		return res
 
-	def agg(self, fun):
+	def agg(self, fun, default_fun=None):
 		"""Returns new Table object from aggregated groups.
-		The argument must be a dictionary where keys are old columns names,
+		The argument must be a dictionary which keys are old columns names,
 		and the values are other dictionaries where keys are new columns names,
-		and the values are strings with aggregation functions names or function or lambdas."""
+		and the values are strings with aggregation functions names or function or lambdas.
+		The last argument allows to aggregate all the rows with single or multiple functions.
+		"""
+
+		if default_fun is not None:
+			for target_name in self.columns:
+				if target_name not in fun:
+					fun[target_name] = {}
+				if isinstance(default_fun, dict):
+					for key in default_fun:
+						fun[target_name]['{}_{}'.format(target_name, key)] = default_fun[key]
+				else:
+					fun[target_name][target_name] = default_fun
+		print(fun)
 
 		self.fun = fun
 		cols = self.keys
@@ -609,7 +635,7 @@ class Grouped(object):
 	def __make_group__(self, keys, cols, should_add_keys):
 		t = 'Group '
 		for i in range(len(self.keys)):
-			t += self.keys[i] + '=' + str(keys[i]) + ' '
+			t += '{}={} '.format(self.keys[i], keys[i])
 		res = Table([], [], t[:-1])
 		if should_add_keys:
 			for i in range(len(self.keys)):
@@ -678,56 +704,77 @@ class Table(object):
 		return len(self.rows)
 
 	@classmethod
-	def from_csv(cls, data, inline=False, empty=None, preprocess=True):
+	def from_csv(cls, data, inline=False, empty=None, preprocess=True, delimeter=None):
 		"""Returns new Table object from CSV data.
 		If inline is False (default), then the first argument is considered
 		as a string with name of a file where the CSV data is located.
 		Otherwise, the first argument is considered as a string with CSV data itself."""
 
+		if delimeter is None:
+			if not inline and '.tsv' in data:
+				delimeter = '\t'
+			else:
+				delimeter = ','
+
+		columns = []
 		rows = []
 		if inline:
 			f = file_container(data)
 			title = None
 		else:
-			f = open(data)
+			f = open(data, 'r+', encoding='utf-8')
 			title = data.split('/')[-1]
 		with f:
+			is_first = True
 			for line in f:
-				cur = line.replace('\n', '').split(',')
-				if preprocess:
-					cur = parse_row(cur, empty=empty)
-				rows.append(cur)
-		columns = rows[0]
-		rows = rows[1:]
+				cur = line.replace('\n', '').split(delimeter)
+				if is_first:
+					is_first = False
+					columns = cur
+				else:
+					if preprocess:
+						cur = parse_row(cur, empty=empty)
+					# TODO: make strict mode with exceptions
+					if len(cur) < len(columns):
+						cur += [None]*(len(columns)-len(cur))
+					rows.append(cur)
+		# columns = rows[0]
+		# rows = rows[1:]
 		res = Table(columns, rows)
 		if title is not None:
 			res.title = title
 		return res
 
-	def to_csv(self, file_name=None):
+	def to_csv(self, file_name=None, delimeter=None):
 		"""Returns string with CSV representation of current Table.
 		If file_name is given, then the data is also written into the file."""
+
+		if delimeter is None:
+			if file_name is not None and '.tsv' in file_name:
+				delimeter = '\t'
+			else:
+				delimeter = ','
 
 		res = ''
 		was = False
 		for el in self.columns:
 			if was:
-				res += ','
+				res += delimeter
 			else:
 				was = True
-			res += el
+			res += str(el)
 		for row in self.rows:
 			res += '\n'
 			was = False
 			for el in row:
 				if was:
-					res += ','
+					res += delimeter
 				else:
 					was = True
 				res += str(el)
 
 		if file_name:
-			with open(file_name, 'w') as f:
+			with open(file_name, 'w', encoding='utf-8') as f:
 				f.write(res)
 		return res
 
@@ -812,17 +859,17 @@ class Table(object):
 
 	@classmethod
 	def from_sql_result(cls, data, empty=None, preprocess=True):
-		data = data.replace(' ', '')
-		data = data.replace('-', '')
 		if data[0] == '+':
 			data = data[data.find('\n') + 1:]
 		cols = data[:data.find('\n')]
 		cols = cols.split('|')[1:-1]
+		cols = list(map(lambda x: x.strip(), cols))
 		data = data[data.find('\n') + 1:]
 		data = data.split('\n')[1:-1]
 		rows = []
 		for ln in data:
 			cur = ln.split('|')[1:-1]
+			cur = list(map(lambda x: x.strip(), cur))
 			if preprocess:
 					cur = parse_row(cur, empty=empty)
 			rows.append(cur)

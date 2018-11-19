@@ -44,8 +44,9 @@ The code of Lemuras is well-commented, so, you can find useful information there
 
 - Add `.nunique()` method.
 - Add `.value_counts()` method.
-- Add quotation marks for string in CSV exporting.
+- Improve CSV / TSV support, add quotation marks for strings.
 - Add examples for `Column.apply()` and `Table.from_sql_result` methods.
+- Add an example for `default_fun` argument of `Grouped.agg()` method.
 
 ## License
 
