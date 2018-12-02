@@ -1,7 +1,7 @@
 __author__ = 'AivanF'
 __copyright__ = 'Copyright 2018, AivanF'
 __contact__ = 'aivanf@mail.ru'
-__version__ = '1.1.6'
+__version__ = '1.1.7'
 __license__ = """License:
  This software is provided 'as-is', without any express or implied warranty.
  You may not hold the author liable.
@@ -17,6 +17,7 @@ __license__ = """License:
 
 from datetime import date, datetime
 import re
+import csv
 import json
 import sys
 
@@ -27,6 +28,11 @@ if sys.version_info[0] == 2:
 else:
 	from io import StringIO
 	file_container = lambda x: StringIO(x)
+
+try:
+	from bs4 import BeautifulSoup
+except ImportError:
+	BeautifulSoup = None
 
 
 def iscollection(x):
@@ -622,7 +628,6 @@ class Grouped(object):
 						fun[target_name]['{}_{}'.format(target_name, key)] = default_fun[key]
 				else:
 					fun[target_name][target_name] = default_fun
-		print(fun)
 
 		self.fun = fun
 		cols = self.keys
@@ -702,240 +707,6 @@ class Table(object):
 	@property
 	def rowcnt(self):
 		return len(self.rows)
-
-	@classmethod
-	def from_csv(cls, data, inline=False, empty=None, preprocess=True, delimeter=None):
-		"""Returns new Table object from CSV data.
-		If inline is False (default), then the first argument is considered
-		as a string with name of a file where the CSV data is located.
-		Otherwise, the first argument is considered as a string with CSV data itself."""
-
-		if delimeter is None:
-			if not inline and '.tsv' in data:
-				delimeter = '\t'
-			else:
-				delimeter = ','
-
-		columns = []
-		rows = []
-		if inline:
-			f = file_container(data)
-			title = None
-		else:
-			f = open(data, 'r+', encoding='utf-8')
-			title = data.split('/')[-1]
-		with f:
-			is_first = True
-			for line in f:
-				cur = line.replace('\n', '').split(delimeter)
-				if is_first:
-					is_first = False
-					columns = cur
-				else:
-					if preprocess:
-						cur = parse_row(cur, empty=empty)
-					# TODO: make strict mode with exceptions
-					if len(cur) < len(columns):
-						cur += [None]*(len(columns)-len(cur))
-					rows.append(cur)
-		# columns = rows[0]
-		# rows = rows[1:]
-		res = Table(columns, rows)
-		if title is not None:
-			res.title = title
-		return res
-
-	def to_csv(self, file_name=None, delimeter=None):
-		"""Returns string with CSV representation of current Table.
-		If file_name is given, then the data is also written into the file."""
-
-		if delimeter is None:
-			if file_name is not None and '.tsv' in file_name:
-				delimeter = '\t'
-			else:
-				delimeter = ','
-
-		res = ''
-		was = False
-		for el in self.columns:
-			if was:
-				res += delimeter
-			else:
-				was = True
-			res += str(el)
-		for row in self.rows:
-			res += '\n'
-			was = False
-			for el in row:
-				if was:
-					res += delimeter
-				else:
-					was = True
-				res += str(el)
-
-		if file_name:
-			with open(file_name, 'w', encoding='utf-8') as f:
-				f.write(res)
-		return res
-
-	def to_sql_create(self):
-		def sql_type(tp, ln):
-			if tp == 'i':
-				if ln < 4:
-					return 'int(1)'
-				elif ln < 6:
-					return 'int(2)'
-				elif ln < 9:
-					return 'int(3)'
-				elif ln < 11:
-					return 'int(4)'
-				else:
-					return 'int(8)'
-			if tp == 'f':
-				return 'float'
-			if tp == 'd':
-				return 'date'
-			if tp == 't':
-				return 'datetime'
-			return 'varchar(' + str(ln) + ')'
-
-		self.find_types()
-		res = 'CREATE TABLE `' + self.title + '` ('
-		firstrow = True
-		for row in self.types.rows:
-			if firstrow:
-				firstrow = False
-				res += '\n'
-			else:
-				res += ',\n'
-			res += '  `' + row[0] + '` ' + sql_type(row[1], row[2])
-		res += '\n) ;'
-		return res
-
-	def to_sql_values(self):
-		if self.types is None:
-			self.find_types()
-		if self.rowcnt < 1:
-			return ''
-		res = "INSERT INTO `" + self.title + "` VALUES "
-		firstrow = True
-		for row in self.rows:
-			if firstrow:
-				firstrow = False
-			else:
-				res += ', '
-			firstcell = True
-			res += "("
-			for i in range(self.colcnt):
-				if firstcell:
-					firstcell = False
-				else:
-					res += ","
-				ctp = self.types.cell(1, i)
-				if ctp == 's' or ctp == 'm' or ctp == 'd' or ctp == 't':
-					res += "'" + str(row[i]) + "'"
-				else:
-					res += str(row[i])
-			res += ")"
-		res += ';'
-		return res
-
-	@classmethod
-	def from_sql_create(cls, data):
-		data = data.replace('\n', ' ')
-		title = list(filter(lalepo, data.split('(')[0].split(' ')))[-1]
-		title = title.replace('`', '')
-		cols = []
-		rows = []
-		b = data.find('(') + 1
-		tps = data[b:].split(',')
-		for el in tps:
-			ch = el.lower()
-			if (' int' in ch) or (' float' in ch) or (' date' in ch) or (' text' in ch) or ('char(' in ch):
-				# print("- Column is here!")
-				# print(ch)
-				cols.append(list(filter(lalepo, el.split(' ')))[0].replace('`', ''))
-		return Table(cols, rows, title)
-
-	@classmethod
-	def from_sql_result(cls, data, empty=None, preprocess=True):
-		if data[0] == '+':
-			data = data[data.find('\n') + 1:]
-		cols = data[:data.find('\n')]
-		cols = cols.split('|')[1:-1]
-		cols = list(map(lambda x: x.strip(), cols))
-		data = data[data.find('\n') + 1:]
-		data = data.split('\n')[1:-1]
-		rows = []
-		for ln in data:
-			cur = ln.split('|')[1:-1]
-			cur = list(map(lambda x: x.strip(), cur))
-			if preprocess:
-					cur = parse_row(cur, empty=empty)
-			rows.append(cur)
-		return Table(cols, rows)
-
-	def add_sql_values(self, data, empty=None):
-		p = re.compile("(\d+|\'.*?\')\s*,?")
-		def cutstr(x):
-			if len(x) > 1:
-				if x[0] == "'" and x[-1] == "'":
-					return x[1:-1]
-			return x
-		while True:
-			b = data.find('(') + 1
-			e = data.find(')')
-			if b > 0 and e > b:
-				# cur = data[b:e].replace("'", '').split(',')
-				cur = p.findall(data[b:e])
-				cur = list(map(cutstr, cur))
-				cur = parse_row(cur, empty=empty)
-				self.add_row(cur)
-				data = data[e+1:]
-				continue
-			else:
-				break
-
-	@classmethod
-	def from_json(cls, data):
-		data = json.loads(data)
-		res = Table(data['columns'], [])
-		for el in data['rows']:
-			res.add_row(el)
-		if 'title' in data:
-			res.title = data['title']
-		return res
-
-	def to_json(self, as_dict=False, pretty=False):
-		body = []
-		if as_dict:
-			for el in self.rows:
-				d = {}
-				for i in range(len(self.columns)):
-					if jsonable(el[i]):
-						d[self.columns[i]] = el[i]
-					else:
-						d[self.columns[i]] = str(el[i])
-				body.append(d)
-		else:
-			for el in self.rows:
-				cur = []
-				for o in el:
-					if jsonable(o):
-						cur.append(o)
-					else:
-						cur.append(str(o))
-				body.append(cur)
-		res = { 'columns': self.columns, 'rows': body, 'title': self.title }
-		if pretty:
-			res = json.dumps(res, indent=2, separators=(', ',': '))
-			res = res.replace(', \n      ', ', ')
-			res = res.replace(', \n    ', ', ')
-			res = res.replace('], \n    [', '], [')
-			res = res.replace('}, \n    {', '}, {')
-		else:
-			res = json.dumps(res, separators=(',',':'))
-		return res
 
 	def cell(self, column, row_index=0):
 		"""Returns cell value by column name or index and a row index (default = 0)."""
@@ -1332,6 +1103,244 @@ class Table(object):
 		title = 'Unique values'
 		return Table(['Column', 'Counts'], rows, title)
 
+	@classmethod
+	def from_csv(cls, data, inline=True, empty=None, preprocess=True, delimiter=',', quotechar='"'):
+		"""Returns new Table object from CSV data.
+		If inline is True (default), then the first argument is considered
+		as a string with CSV data itself. Otherwise, the first argument
+		is considered as a filename where the CSV data is located."""
+
+		if delimiter is None:
+			if not inline and '.tsv' in data:
+				delimiter = '\t'
+			else:
+				delimiter = ','
+
+		columns = []
+		rows = []
+		if inline:
+			f = file_container(data)
+			title = None
+		else:
+			f = open(data, 'r+', encoding='utf-8')
+			title = data.split('/')[-1]
+		with f:
+			csvreader = csv.reader(f, delimiter=delimiter, quotechar=quotechar)
+			is_first = True
+			for row in csvreader:
+				if is_first:
+					is_first = False
+					columns = row[:]
+				else:
+					if preprocess:
+						row = parse_row(row, empty=empty)
+					rows.append(row)
+		res = Table(columns, rows)
+		if title is not None:
+			res.title = title
+		return res
+
+	def to_csv(self, file_name=None, delimiter=',', quotechar='"'):
+		"""Returns string with CSV representation of current Table.
+		If file_name is given, then the data is also written into the file."""
+		res = ''
+		with file_container('') as temp:
+			writer = csv.writer(temp, delimiter=delimiter, quotechar=quotechar)
+			writer.writerow(self.columns)
+			for row in self.rows:
+				writer.writerow(row)
+			temp.seek(0)
+			res = temp.read()
+
+		if file_name is not None:
+			with open(file_name, 'w', encoding='utf-8') as f:
+				f.write(res)
+		return res
+
+	def to_sql_create(self):
+		def sql_type(tp, ln):
+			if tp == 'i':
+				if ln < 4:
+					return 'int(1)'
+				elif ln < 6:
+					return 'int(2)'
+				elif ln < 9:
+					return 'int(3)'
+				elif ln < 11:
+					return 'int(4)'
+				else:
+					return 'int(8)'
+			if tp == 'f':
+				return 'float'
+			if tp == 'd':
+				return 'date'
+			if tp == 't':
+				return 'datetime'
+			return 'varchar(' + str(ln) + ')'
+
+		self.find_types()
+		res = 'CREATE TABLE `' + self.title + '` ('
+		firstrow = True
+		for row in self.types.rows:
+			if firstrow:
+				firstrow = False
+				res += '\n'
+			else:
+				res += ',\n'
+			res += '  `' + row[0] + '` ' + sql_type(row[1], row[2])
+		res += '\n) ;'
+		return res
+
+	def to_sql_values(self):
+		if self.types is None:
+			self.find_types()
+		if self.rowcnt < 1:
+			return ''
+		res = "INSERT INTO `" + self.title + "` VALUES "
+		firstrow = True
+		for row in self.rows:
+			if firstrow:
+				firstrow = False
+			else:
+				res += ', '
+			firstcell = True
+			res += "("
+			for i in range(self.colcnt):
+				if firstcell:
+					firstcell = False
+				else:
+					res += ","
+				ctp = self.types.cell(1, i)
+				if ctp == 's' or ctp == 'm' or ctp == 'd' or ctp == 't':
+					res += "'" + str(row[i]) + "'"
+				else:
+					res += str(row[i])
+			res += ")"
+		res += ';'
+		return res
+
+	@classmethod
+	def from_sql_create(cls, data):
+		data = data.replace('\n', ' ')
+		title = list(filter(lalepo, data.split('(')[0].split(' ')))[-1]
+		title = title.replace('`', '')
+		cols = []
+		rows = []
+		b = data.find('(') + 1
+		tps = data[b:].split(',')
+		for el in tps:
+			ch = el.lower()
+			if (' int' in ch) or (' float' in ch) or (' date' in ch) or (' text' in ch) or ('char(' in ch):
+				# print("- Column is here!")
+				# print(ch)
+				cols.append(list(filter(lalepo, el.split(' ')))[0].replace('`', ''))
+		return Table(cols, rows, title)
+
+	@classmethod
+	def from_sql_result(cls, data, empty=None, preprocess=True):
+		if data[0] == '+':
+			data = data[data.find('\n') + 1:]
+		cols = data[:data.find('\n')]
+		cols = cols.split('|')[1:-1]
+		cols = list(map(lambda x: x.strip(), cols))
+		data = data[data.find('\n') + 1:]
+		data = data.split('\n')[1:-1]
+		rows = []
+		for ln in data:
+			cur = ln.split('|')[1:-1]
+			cur = list(map(lambda x: x.strip(), cur))
+			if preprocess:
+					cur = parse_row(cur, empty=empty)
+			rows.append(cur)
+		return Table(cols, rows)
+
+	def add_sql_values(self, data, empty=None):
+		p = re.compile("(\d+|\'.*?\')\s*,?")
+		def cutstr(x):
+			if len(x) > 1:
+				if x[0] == "'" and x[-1] == "'":
+					return x[1:-1]
+			return x
+		while True:
+			b = data.find('(') + 1
+			e = data.find(')')
+			if b > 0 and e > b:
+				# cur = data[b:e].replace("'", '').split(',')
+				cur = p.findall(data[b:e])
+				cur = list(map(cutstr, cur))
+				cur = parse_row(cur, empty=empty)
+				self.add_row(cur)
+				data = data[e+1:]
+				continue
+			else:
+				break
+
+	@classmethod
+	def from_json(cls, data):
+		data = json.loads(data)
+		res = Table(data['columns'], [])
+		for el in data['rows']:
+			res.add_row(el)
+		if 'title' in data:
+			res.title = data['title']
+		return res
+
+	def to_json(self, as_dict=False, pretty=False):
+		body = []
+		if as_dict:
+			for el in self.rows:
+				d = {}
+				for i in range(len(self.columns)):
+					if jsonable(el[i]):
+						d[self.columns[i]] = el[i]
+					else:
+						d[self.columns[i]] = str(el[i])
+				body.append(d)
+		else:
+			for el in self.rows:
+				cur = []
+				for o in el:
+					if jsonable(o):
+						cur.append(o)
+					else:
+						cur.append(str(o))
+				body.append(cur)
+		res = { 'columns': self.columns, 'rows': body, 'title': self.title }
+		if pretty:
+			res = json.dumps(res, indent=2, separators=(', ',': '))
+			res = res.replace(', \n      ', ', ')
+			res = res.replace(', \n    ', ', ')
+			res = res.replace('], \n    [', '], [')
+			res = res.replace('}, \n    {', '}, {')
+		else:
+			res = json.dumps(res, separators=(',',':'))
+		return res
+
+	@classmethod
+	def from_html(cls, data):
+		if BeautifulSoup is None:
+			raise ImportError('BeautifulSoup4 is needed for HTML parsing!')
+		# Parse HTML
+		data = BeautifulSoup(data, 'lxml')
+		# Find table
+		data = data.find_all('table')[0]
+		# Iterate over rows
+		columns = None
+		rows = []
+		for row in data.find_all('tr'):
+			# Iterate over values
+			values = []
+			for column in row.find_all('td'):
+				values.append(column.get_text())
+			if len(values) == 0:
+				for column in row.find_all('th'):
+					values.append(column.get_text())
+			if columns is not None:
+				rows.append(values)
+			else:
+				columns = values
+		return Table(columns, rows)
+
 	minshowrows = 3
 	maxshowrows = 6
 	minshowcols = 6
@@ -1365,17 +1374,17 @@ class Table(object):
 
 	def html(self, cut=True):
 		showrowscnt, showcolscnt, hiddenrows, hiddencols = self.__need_cut__(cut)
-		res = '<table><tr><th>'
+		res = '<table>\n<tr><th>'
 		res += '</th><th>'.join(map(lambda x: repr(x), self.columns[:showcolscnt]))
 		if hiddencols:
 				res += '</th><th>...'
-		res += '</th></tr>'
+		res += '</th></tr>\n'
 		for row in self.rows[:showrowscnt]:
 			res += '<tr><td>'
 			res += '</td><td>'.join(map(lambda x: repr_cell(x), row[:showcolscnt]))
 			if hiddencols:
 				res += '</td><td>...'
-			res += '</td></tr>'
+			res += '</td></tr>\n'
 		if hiddenrows:
 			res += '<tr><th>'
 			res += '</th><th>'.join(map(lambda x: str(x), ['...'] * showcolscnt))
