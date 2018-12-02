@@ -11,7 +11,7 @@ Again, this library may be considered as a simplified analogue of Pandas, but no
 - Integration with *Jupyter IPython Notebook*: Lemuras objects are printed as nice tables.
 - Most of the syntax is very similar to *Pandas*.
 - Automatic columns types detection.
-- Save / load **CSV files**, **JSON**, **SQL**, **HTML**.
+- Save / load **CSV files**, **JSON**, **HTML** tables, **SQL** (both query result and table creation code).
 - Cells access, rows, columns adding, deleting, columns renaming, functions/lambdas applying, rows sorting.
 - Dealing with **columns**: you can take a table column, do math with the values, compare, check existing in other column or list, then filter a table by it or add it to a table, etc.
 - **Grouping by** *none*, *one*, or *multiple columns*, **aggregation** with *built-in* or *user-defined functions and lambdas*.
@@ -42,10 +42,8 @@ The code of Lemuras is well-commented, so, you can find useful information there
 
 ## ToDos
 
-- Add `.nunique()` method.
-- Add `.value_counts()` method.
-- Add `.from_html()` method for HTML tables parsing.
-- Improve CSV / TSV support, add quotation marks for strings.
+- Add `.nunique()` & `.value_counts()` methods.
+- Add examples for `.from_html()` method for HTML tables parsing.
 - Add examples for `Column.apply()` and `Table.from_sql_result` methods.
 - Add an example for `default_fun` argument of `Grouped.agg()` method.
 
