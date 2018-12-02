@@ -79,32 +79,42 @@ def tryDate(x):
 	except:
 		pass
 	try:
-		return datetime.strptime(x[:10], '%d/%m/%Y').date()
+		return datetime.strptime(x[:10], '%m/%d/%Y').date()
+	except:
+		pass
+	try:
+		return datetime.strptime(x[:10], '%d.%m.%Y').date()
 	except:
 		pass
 	return None
 
 
+def parse_value(val, empty=''):
+	v = tryInt(val)
+	if v is not None:
+		return v
+	else:
+		v = tryFloat(val)
+		if v is not None:
+			return v
+		else:
+			v = tryDatetime(val)
+			if v is not None:
+				return v
+			else:
+				v = tryDate(val)
+				if v is not None:
+					return v
+	v = str(val).lower()
+	if v == 'none' or v == 'null' or len(str(v)) == 0:
+		return empty
+	return val
+
+
 def parse_row(lst, empty=''):
 	"""Takes a list of strings and returns list of values with different types."""
 	for i in range(len(lst)):
-		v = tryInt(lst[i])
-		if v is not None:
-			lst[i] = v
-		else:
-			v = tryFloat(lst[i])
-			if v is not None:
-				lst[i] = v
-			else:
-				v = tryDatetime(lst[i])
-				if v is not None:
-					lst[i] = v
-				else:
-					v = tryDate(lst[i])
-					if v is not None:
-						lst[i] = v
-		if str(lst[i]) == 'None' or len(str(lst[i])) == 0:
-			lst[i] = empty
+		lst[i] = parse_value(lst[i])
 	return lst
 
 
@@ -814,14 +824,17 @@ class Table(object):
 			res[self.columns[i]] = self.rows[row_index][i]
 		return res
 
-	def add_row(self, data, strict=True, empty=None):
+	def add_row(self, data, strict=True, empty=None, preprocess=False):
 		"""Adds a row to the Table. The argument must be either list or dictionary."""
 		if iscollection(data):
 			if len(data) != self.colcnt:
 				raise ValueError('Table.add_row list argument must have length equal to columns count!')
 			row = []
 			for el in data:
-				row.append(el)
+				if preprocess:
+					row.append(parse_value(el))
+				else:
+					row.append(el)
 			self.rows.append(row)
 		elif isinstance(data, dict):
 			row = []
@@ -832,7 +845,10 @@ class Table(object):
 					else:
 						row.append(empty)
 				else:
-					row.append(data[el])
+					if preprocess:
+						row.append(parse_value(data[el]))
+					else:
+						row.append(data[el])
 			self.rows.append(row)
 		else:
 			raise ValueError('Table.add_row argument must be either list or dict!')
@@ -1269,7 +1285,7 @@ class Table(object):
 				cur = p.findall(data[b:e])
 				cur = list(map(cutstr, cur))
 				cur = parse_row(cur, empty=empty)
-				self.add_row(cur)
+				self.add_row(cur, preprocess=True)
 				data = data[e+1:]
 				continue
 			else:
@@ -1279,8 +1295,8 @@ class Table(object):
 	def from_json(cls, data):
 		data = json.loads(data)
 		res = Table(data['columns'], [])
-		for el in data['rows']:
-			res.add_row(el)
+		for row in data['rows']:
+			res.add_row(row, preprocess=True)
 		if 'title' in data:
 			res.title = data['title']
 		return res
@@ -1336,7 +1352,7 @@ class Table(object):
 				for column in row.find_all('th'):
 					values.append(column.get_text())
 			if columns is not None:
-				rows.append(values)
+				rows.append(parse_row(values))
 			else:
 				columns = values
 		return Table(columns, rows)
@@ -1377,7 +1393,7 @@ class Table(object):
 		res = '<table>\n<tr><th>'
 		res += '</th><th>'.join(map(lambda x: repr(x), self.columns[:showcolscnt]))
 		if hiddencols:
-				res += '</th><th>...'
+			res += '</th><th>...'
 		res += '</th></tr>\n'
 		for row in self.rows[:showrowscnt]:
 			res += '<tr><td>'
