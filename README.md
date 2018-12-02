@@ -43,8 +43,7 @@ The code of Lemuras is well-commented, so, you can find useful information there
 ## ToDos
 
 - Add `.nunique()` & `.value_counts()` methods.
-- Add examples for `.from_html()` method for HTML tables parsing.
-- Add examples for `Column.apply()` and `Table.from_sql_result` methods.
+- Add an example for `Column.apply()` method.
 
 ## License
 
