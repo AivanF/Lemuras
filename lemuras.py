@@ -774,7 +774,7 @@ class Table(object):
 		Second argument is optional title."""
 
 		if isinstance(data, Column):
-			if not title:
+			if title is None:
 				title = data.title
 		elif iscollection(data):
 			if title is None:
@@ -1142,10 +1142,12 @@ class Table(object):
 		rows = []
 		if inline:
 			f = file_container(data)
-			title = None
+			if title is None:
+				title = 'from CSV'
 		else:
 			f = open(data, 'r+', encoding='utf-8')
-			title = data.split('/')[-1]
+			if title is None:
+				title = data.split('/')[-1]
 		with f:
 			csvreader = csv.reader(f, delimiter=delimiter, quotechar=quotechar)
 			is_first = True
@@ -1157,10 +1159,7 @@ class Table(object):
 					if preprocess:
 						row = parse_row(row, empty=empty)
 					rows.append(row)
-		res = Table(columns, rows, title)
-		if title is not None:
-			res.title = title
-		return res
+		return Table(columns, rows, title)
 
 	def to_csv(self, file_name=None, delimiter=',', quotechar='"'):
 		"""Returns string with CSV representation of current Table.
@@ -1258,7 +1257,7 @@ class Table(object):
 		return Table(cols, [], title)
 
 	@classmethod
-	def from_sql_result(cls, data, empty=None, preprocess=True, title=None):
+	def from_sql_result(cls, data, empty=None, preprocess=True, title='from SQL res'):
 		if data[0] == '+':
 			data = data[data.find('\n') + 1:]
 		cols = data[:data.find('\n')]
@@ -1297,13 +1296,15 @@ class Table(object):
 				break
 
 	@classmethod
-	def from_json(cls, data, preprocess=True, title=None):
+	def from_json(cls, data, preprocess=True, title='from JSON'):
 		data = json.loads(data)
 		res = Table(data['columns'], [], title)
 		for row in data['rows']:
 			res.add_row(row, preprocess=preprocess)
 		if 'title' in data:
 			res.title = data['title']
+		else:
+			res.title = title
 		return res
 
 	def to_json(self, as_dict=False, pretty=False):
@@ -1338,7 +1339,7 @@ class Table(object):
 		return res
 
 	@classmethod
-	def from_html(cls, data, title=None):
+	def from_html(cls, data, title='from HTML'):
 		if BeautifulSoup is None:
 			raise ImportError('BeautifulSoup4 is needed for HTML parsing!')
 		# Parse HTML
