@@ -704,9 +704,11 @@ class Grouped(object):
 
 
 class Table(object):
-	def __init__(self, columns, rows, title='NoTitle'):
+	def __init__(self, columns, rows, title=None):
 		self.columns = columns
 		self.rows = rows
+		if title is None:
+			title = 'NoTitle'
 		self.title = title
 		self.column_indices = {}
 		self.types = None
@@ -1124,7 +1126,7 @@ class Table(object):
 		return Table(['Column', 'Counts'], rows, title)
 
 	@classmethod
-	def from_csv(cls, data, inline=True, empty=None, preprocess=True, delimiter=',', quotechar='"'):
+	def from_csv(cls, data, inline=True, empty=None, preprocess=True, title=None, delimiter=',', quotechar='"'):
 		"""Returns new Table object from CSV data.
 		If inline is True (default), then the first argument is considered
 		as a string with CSV data itself. Otherwise, the first argument
@@ -1155,7 +1157,7 @@ class Table(object):
 					if preprocess:
 						row = parse_row(row, empty=empty)
 					rows.append(row)
-		res = Table(columns, rows)
+		res = Table(columns, rows, title)
 		if title is not None:
 			res.title = title
 		return res
@@ -1256,7 +1258,7 @@ class Table(object):
 		return Table(cols, [], title)
 
 	@classmethod
-	def from_sql_result(cls, data, empty=None, preprocess=True):
+	def from_sql_result(cls, data, empty=None, preprocess=True, title=None):
 		if data[0] == '+':
 			data = data[data.find('\n') + 1:]
 		cols = data[:data.find('\n')]
@@ -1271,7 +1273,7 @@ class Table(object):
 			if preprocess:
 					cur = parse_row(cur, empty=empty)
 			rows.append(cur)
-		return Table(cols, rows)
+		return Table(cols, rows, title)
 
 	def add_sql_values(self, data, empty=None):
 		p = re.compile("(\d+|\'.*?\')\s*,?")
@@ -1295,9 +1297,9 @@ class Table(object):
 				break
 
 	@classmethod
-	def from_json(cls, data, preprocess=True):
+	def from_json(cls, data, preprocess=True, title=None):
 		data = json.loads(data)
-		res = Table(data['columns'], [])
+		res = Table(data['columns'], [], title)
 		for row in data['rows']:
 			res.add_row(row, preprocess=preprocess)
 		if 'title' in data:
@@ -1336,7 +1338,7 @@ class Table(object):
 		return res
 
 	@classmethod
-	def from_html(cls, data):
+	def from_html(cls, data, title=None):
 		if BeautifulSoup is None:
 			raise ImportError('BeautifulSoup4 is needed for HTML parsing!')
 		# Parse HTML
@@ -1358,7 +1360,7 @@ class Table(object):
 				rows.append(parse_row(values))
 			else:
 				columns = values
-		return Table(columns, rows)
+		return Table(columns, rows, title)
 
 	minshowrows = 4
 	maxshowrows = 7
