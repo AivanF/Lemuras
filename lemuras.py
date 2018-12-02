@@ -273,7 +273,7 @@ class Column(object):
 		if n > 12:
 			n = 10
 			ns = True
-		res = '<b>Column</b> object, title: "' + self.title + '" values: ' + str(self.values[:n]) + '.'
+		res = '<b>Column</b> object, title: "{}" values: {}.'.format(self.title, self.values[:n])
 		if ns:
 			res += ' . .'
 		return res
@@ -284,7 +284,7 @@ class Column(object):
 		if n > 12:
 			n = 10
 			ns = True
-		res = '- Column object, title: "' + self.title + '" values: ' + str(self.values[:n]) + '.'
+		res = '- Column object, title: "{}" values: {}.'.format(self.title, self.values[:n])
 		if ns:
 			res += ' . .'
 		return res
@@ -689,13 +689,16 @@ class Grouped(object):
 		return Table(self.keys + ['counts'], rows, 'Groups')
 
 	def _repr_html_(self):
-		res = '<b>Grouped</b> object, keys: ' + str(self.keys) + ', old columns: ' + str(list(self.columns.keys())) + '.<br>'
+		res = '<b>Grouped</b> object, keys: {}, old columns: {}.<br>\n'.format(
+			self.keys, list(self.columns.keys())
+		)
 		res += self.counts().html()
 		return res
 
 	def __repr__(self):
-		res = '- Grouped object, keys: ' + str(self.keys) + ', old columns: ' + str(list(self.columns.keys())) + '.'
-		return res
+		return '- Grouped object, keys: {}, old columns: {}.'.format(
+			self.keys, list(self.columns.keys())
+		)
 
 # END class Grouped
 
@@ -894,7 +897,7 @@ class Table(object):
 				self.column_indices[newname] = self.column_indices[oldname]
 				self.column_indices.pop(oldname, None)
 		else:
-			print('Table.rename on incorrect column ' + oldname)
+			print('Table.rename on incorrect column {}'.format(oldname))
 
 	def apply(self, ind, task):
 		"""Applies lambda or function to all the column values.
@@ -920,7 +923,7 @@ class Table(object):
 		for i in range(la):
 			if prism[i]:
 				res.append(self.rows[i])
-		return Table(self.columns[:], res, 'Filtered ' + self.title)
+		return Table(self.columns[:], res, 'Filtered {}'.format(self.title))
 
 	def sort(self, cols, asc=True):
 		"""Sorts rows in place.
@@ -1001,7 +1004,7 @@ class Table(object):
 				else:
 					row.append(empty)
 			rows.append(row)
-		return Table([newrow] + colsels, rows, 'Pivot')
+		return Table([newrow] + colsels, rows, 'Pivot of {}'.format(self.title))
 
 	@classmethod
 	def merge(cls, tl, tr, keys, how='inner', empty=None):
@@ -1106,7 +1109,8 @@ class Table(object):
 							row[rightcol2key[k]] = rr[k]
 					resrow.append(row)
 
-		return Table(rescol, resrow, 'Merged ' + how + ' ' + tl.title + ' ' + tr.title)
+		title = 'Merged {} {} & {}'.format(how, tl.title, tr.title)
+		return Table(rescol, resrow, title)
 
 	def nunique(self):
 		"""Returns new Table object with counts of unique values in columns of this Table."""
@@ -1195,7 +1199,7 @@ class Table(object):
 			return 'varchar(' + str(ln) + ')'
 
 		self.find_types()
-		res = 'CREATE TABLE `' + self.title + '` ('
+		res = 'CREATE TABLE `{}` ('.format(self.title)
 		firstrow = True
 		for row in self.types.rows:
 			if firstrow:
@@ -1212,7 +1216,7 @@ class Table(object):
 			self.find_types()
 		if self.rowcnt < 1:
 			return ''
-		res = "INSERT INTO `" + self.title + "` VALUES "
+		res = 'INSERT INTO `{}` VALUES '.format(self.title)
 		firstrow = True
 		for row in self.rows:
 			if firstrow:
@@ -1241,7 +1245,6 @@ class Table(object):
 		title = list(filter(lalepo, data.split('(')[0].split(' ')))[-1]
 		title = title.replace('`', '')
 		cols = []
-		rows = []
 		b = data.find('(') + 1
 		tps = data[b:].split(',')
 		for el in tps:
@@ -1250,7 +1253,7 @@ class Table(object):
 				# print("- Column is here!")
 				# print(ch)
 				cols.append(list(filter(lalepo, el.split(' ')))[0].replace('`', ''))
-		return Table(cols, rows, title)
+		return Table(cols, [], title)
 
 	@classmethod
 	def from_sql_result(cls, data, empty=None, preprocess=True):
@@ -1292,11 +1295,11 @@ class Table(object):
 				break
 
 	@classmethod
-	def from_json(cls, data):
+	def from_json(cls, data, preprocess=True):
 		data = json.loads(data)
 		res = Table(data['columns'], [])
 		for row in data['rows']:
-			res.add_row(row, preprocess=True)
+			res.add_row(row, preprocess=preprocess)
 		if 'title' in data:
 			res.title = data['title']
 		return res
@@ -1357,8 +1360,8 @@ class Table(object):
 				columns = values
 		return Table(columns, rows)
 
-	minshowrows = 3
-	maxshowrows = 6
+	minshowrows = 4
+	maxshowrows = 7
 	minshowcols = 6
 	maxshowcols = 8
 
@@ -1378,7 +1381,7 @@ class Table(object):
 
 	def __str__(self):
 		showrowscnt, showcolscnt, hiddenrows, hiddencols = self.__need_cut__()
-		res = '- Table object, title: "' + self.title + '", ' + str(len(self.columns)) + ' columns, ' + str(len(self.rows)) + ' rows.\n'
+		res = '- Table object, title: "{}", {} columns, {} rows.\n'.format(self.title, len(self.columns), len(self.rows))
 		res += ' '.join(map(lambda x: repr(x), self.columns[:showcolscnt]))
 		if hiddencols:
 			res += ' ...'
@@ -1411,7 +1414,7 @@ class Table(object):
 		return res
 
 	def _repr_html_(self):
-		res = '<b>Table</b> object, title: <b>' + self.title + '</b>, ' + str(len(self.columns)) + ' columns, ' + str(len(self.rows)) + ' rows.<br>'
+		res = '<b>Table</b> object, title: <b>{}</b>, {} columns, {} rows.<br>\n'.format(self.title, len(self.columns), len(self.rows))
 		res += self.html()
 		return res
 
