@@ -1,6 +1,6 @@
 # Lemuras
 
-Sometimes you cannot or don't want to use Pandas or similar advanced tool for data analysis, but still have a need to manipulate large tables. In such cases you can use **Lemuras** – it is a *pure Python* library in a single file without dependencies. And if you have some experience of Pandas or SQL, then you can easily work with Lemuras.
+Sometimes you cannot or don't want to use Pandas or similar advanced tool for data analysis, but still have a need to manipulate large tables with code. In such cases you can use **Lemuras** – it is a *pure Python* library in a single file without dependencies. And if you have some experience of Pandas or SQL, then you can easily work with Lemuras.
 
 Again, this library may be considered as a simplified analogue of Pandas, but not as a replacement. However, Lemuras is capable of processing an operation on a few tables with several thousands of rows in less than a second.
 
@@ -20,6 +20,15 @@ Again, this library may be considered as a simplified analogue of Pandas, but no
 - **Pivot tables** creation.
 
 It was tasted on both Python **2.7.13** and Python **3.6.0**.
+
+
+## Installation 
+
+There are 2 simple options:
+
+- Execute `pip install Lemuras` [(view project on PyPI)](https://pypi.org/project/Lemuras/).
+
+- Just copy the file `lemuras.py` from this repository to your project.
 
 
 ## Examples
