@@ -16,6 +16,7 @@ __license__ = """License:
  This notice may not be removed or altered from any source distribution."""
 
 from datetime import date, datetime
+import numbers
 import re
 import csv
 import json
@@ -157,16 +158,44 @@ def avg(lst):
 		return 0
 
 
+def std(lst, ddof=0):
+	"""Calculates the population standard deviation by default;
+	specify ddof=1 to compute the sample standard deviation."""
+	if len(lst) >= 1+ddof:
+		c = avg(lst)
+		# Sum of square deviations
+		ss = sum((x-c)**2 for x in lst)
+		# Dispersion
+		disp = ss / (len(lst) - ddof)
+		return disp ** 0.5
+	else:
+		return 0
+
+
+def numbers_only(lst):
+	return [x for x in lst if isinstance(x, numbers.Number)]
+
+
+def call_with_numbers_only(task):
+	"""Returns a function whuch takes a list and executes
+	argument function with numbers from that list.
+	"""
+	def inner(lst):
+		return task(numbers_only(lst))
+	return inner
+
+
 aggfuns = {
-	'avg': avg,
-	'mean': avg,
-	'mode': mode,
-	'middle': median,
-	'median': median,
+	'avg': call_with_numbers_only(avg),
+	'mean': call_with_numbers_only(avg),
+	'mode': call_with_numbers_only(mode),
+	'middle': call_with_numbers_only(median),
+	'median': call_with_numbers_only(median),
+	'std': call_with_numbers_only(std),
+	'sum': call_with_numbers_only(sum),
+	'min': call_with_numbers_only(min),
+	'max': call_with_numbers_only(max),
 	'count': len,
-	'sum': sum,
-	'min': min,
-	'max': max,
 	'first': lambda x: x[0] if len(x) > 0 else None,
 	'last': lambda x: x[-1] if len(x) > 0 else None,
 }
@@ -257,15 +286,39 @@ class Column(object):
 		"""Returns number of unique values."""
 		return len(set(self.values))
 
-	def apply(self, task):
-		"""Returns new column with applied lambda or function to all the values.
+	def none_to(self, default=0):
+		"""Replaces None elements with a given value."""
+		for i in range(len(self.values)):
+			if self.values[i] is None:
+				self.values[i] = default
+		return self
+
+	def apply(self, task, *args):
+		""" Several cases are possible:
+		1. Applies function for each column value if a function is given.
+		2. Changes elements types if type name is given.
+		The following are supported: str, int, float, date, datetime.
+		All the types can take a default value.
+		"""
+		# TODO: make same behaviour in Table.apply
+		if isinstance(task, str):
+			if task in aggfuns:
+				return aggfuns[task](self.values, *args)
+			else:
+				raise ValueError('Applied function named "{}" does not exist!'.format(task))
+	
+		"""Returns this column with applied lambda or function to all the values.
 		The argument must be a function or a lambda expression."""
 		res = []
 		for i in range(len(self.values)):
-			# self.values[i] = task(self.values[i])
-			res.append(task(self.values[i]))
-		# return self
-		return Column(res)
+			self.values[i] = task(self.values[i], *args)
+			# res.append(task(self.values[i]))
+		return self
+		# return Column(res)
+
+	def copy(self):
+		"""Returns new Column as a deep copy of this one"""
+		return Column(values=self.values[:], title=self.title)
 
 	def _repr_html_(self):
 		n = len(self.values)
