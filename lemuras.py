@@ -1,7 +1,7 @@
 __author__ = 'AivanF'
 __copyright__ = 'Copyright 2018, AivanF'
-__contact__ = 'aivanf@mail.ru'
-__version__ = '1.1.7'
+__contact__ = 'projects@aivanf.com'
+__version__ = '1.1.8'
 __license__ = """License:
  This software is provided 'as-is', without any express or implied warranty.
  You may not hold the author liable.
@@ -36,28 +36,28 @@ except ImportError:
 
 
 def iscollection(x):
-	return isinstance(x, list) or isinstance(x, tuple)
+	return isinstance(x, list) or isinstance(x, tuple) or isinstance(x, set)
 
 
 # LAmbda LEngth POsitive
 lalepo = lambda x: len(x) > 0
 
 
-def tryInt(x):
+def tryInt(x, default=0):
 	try:
 		return int(x)
 	except:
-		return None
+		return default
 
 
-def tryFloat(x):
+def tryFloat(x, default=0):
 	try:
 		return float(x)
 	except:
-		return None
+		return default
 
 
-def tryDatetime(x):
+def tryDatetime(x, default=None):
 	if isinstance(x, datetime):
 		return x
 	try:
@@ -68,10 +68,10 @@ def tryDatetime(x):
 		return datetime.strptime(x[:16], '%Y-%m-%d %H:%M')
 	except:
 		pass
-	return None
+	return default
 
 
-def tryDate(x):
+def tryDate(x, default=None):
 	if isinstance(x, date):
 		return x
 	try:
@@ -86,23 +86,23 @@ def tryDate(x):
 		return datetime.strptime(x[:10], '%d.%m.%Y').date()
 	except:
 		pass
-	return None
+	return default
 
 
 def parse_value(val, empty=''):
-	v = tryInt(val)
+	v = tryInt(val, None)
 	if v is not None:
 		return v
 	else:
-		v = tryFloat(val)
+		v = tryFloat(val, None)
 		if v is not None:
 			return v
 		else:
-			v = tryDatetime(val)
+			v = tryDatetime(val, None)
 			if v is not None:
 				return v
 			else:
-				v = tryDate(val)
+				v = tryDate(val, None)
 				if v is not None:
 					return v
 	v = str(val).lower()
@@ -549,14 +549,14 @@ class Grouped(object):
 		# {'target_column_name': {'new_column_name': function}}
 		self.fun = None
 
-		# Columns indices of keys in original columns
+		# Indices of key columns in original table
 		self.gun = []
 		for el in keys:
 			self.gun.append(column_indices[el])
 
 		# Columns names of grouped rows
 		self.columns = {}
-		# Whether old indices should be saved
+		# Whether old columns should be saved
 		self.column_indices = []
 		step = 0
 		for cur in columns:
@@ -567,7 +567,7 @@ class Grouped(object):
 			else:
 				self.column_indices.append(False)
 
-		# Dict of dict of ... of list with grouped rows
+		# Dict of dict of ... of list with a list of columns
 		if self.count > 0:
 			self.values = {}
 		else:
@@ -584,12 +584,13 @@ class Grouped(object):
 					# store columns independently
 					vals[cur] = listOfLists(len(self.columns))
 				else:
+					# add one more dict layer
 					vals[cur] = {}
 			vals = vals[cur]
 
-		# Save values with appropriate indices only - without keys
+		# Save values with appropriate indices only - not key columns
 		step = 0
-		for i in range(len(row)):
+		for i in range(len(self.columns)):
 			if self.column_indices[i]:
 				# Columns-first structure
 				vals[step].append(row[i])
