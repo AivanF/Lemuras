@@ -205,6 +205,21 @@ class Column(object):
 	def __init__(self, values, title='-'):
 		self.values = values
 		self.title = title
+		self.idx = 0
+
+	def __iter__(self):
+		return self
+
+	def __next__(self):
+		self.idx += 1
+		try:
+			return self.values[self.idx-1]
+		except IndexError:
+			self.idx = 0
+			raise StopIteration
+	
+	# Python 2.x compatibility
+	next = __next__
 
 	@classmethod
 	def make(cls, size, values=None, title='-'):
@@ -768,6 +783,21 @@ class Table(object):
 		self.types = None
 		for i in range(len(self.columns)):
 			self.column_indices[self.columns[i]] = i
+		self.idx = 0
+
+	def __iter__(self):
+		return self
+
+	def __next__(self):
+		self.idx += 1
+		try:
+			return self.rows[self.idx-1]
+		except IndexError:
+			self.idx = 0
+			raise StopIteration
+	
+	# Python 2.x compatibility
+	next = __next__
 
 	@property
 	def colcnt(self):
