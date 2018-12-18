@@ -44,6 +44,15 @@ def iscollection(x):
 lalepo = lambda x: len(x) > 0
 
 
+def makeStr(x, default=None):
+	if isinstance(x, str):
+		return x
+	elif default is None:
+		return str(x)
+	else:
+		return default
+
+
 def tryInt(x, default=0):
 	try:
 		return int(x)
@@ -110,6 +119,15 @@ def parse_value(val, empty=''):
 	if v == 'none' or v == 'null' or len(str(v)) == 0:
 		return empty
 	return val
+
+
+typefuns = {
+	'str': makeStr,
+	'int': tryInt,
+	'float': tryFloat,
+	'date': tryDate,
+	'datetime': tryDatetime,
+}
 
 
 def parse_row(lst, empty=''):
@@ -314,11 +332,15 @@ class Column(object):
 		2. Changes elements types if type name is given.
 		The following are supported: str, int, float, date, datetime.
 		All the types can take a default value.
+		3. Returns an aggregated value.
 		"""
 		# TODO: make same behaviour in Table.apply
 		if isinstance(task, str):
 			if task in aggfuns:
 				return aggfuns[task](self.values, *args)
+			elif task in typefuns:
+				task = typefuns[task]
+				# Continue function applying
 			else:
 				raise ValueError('Applied function named "{}" does not exist!'.format(task))
 	
