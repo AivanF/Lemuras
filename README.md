@@ -26,9 +26,9 @@ It was tasted on both Python **2.7.13** and Python **3.6.0**.
 
 There are 2 simple options:
 
-- Execute `pip install Lemuras` [(view project on PyPI)](https://pypi.org/project/Lemuras/).
+- Use `pip install Lemuras` [(view project on PyPI)](https://pypi.org/project/Lemuras/).
 
-- Just copy the file `lemuras.py` from this repository to your project.
+- Copy `lemuras` folder if you want the freshest version.
 
 
 ## Examples
