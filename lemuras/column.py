@@ -17,8 +17,10 @@ __license__ = """License:
 
 from datetime import date, datetime
 from .processing import typefuns, aggfuns
+from functools import total_ordering
 
 
+@total_ordering
 class Column(object):
 	def __init__(self, values=None, title='-', table=None, source_name=None):
 		if values is None and table is None:
@@ -338,23 +340,6 @@ class Column(object):
 				res.append(el / other)
 			return Column(res)
 
-	def __gt__(self, other):
-		if isinstance(other, Column):
-			la = len(self)
-			lb = len(other)
-			if lb == la:
-				res = []
-				for i in range(la):
-					res.append(self.get_value(i) > other[i])
-				return Column(res)
-			else:
-				raise ValueError('Column.__gt__ others Column len must be the same')
-		else:
-			res = []
-			for el in self.get_values():
-				res.append(el > other)
-			return Column(res)
-
 	def __lt__(self, other):
 		if isinstance(other, Column):
 			la = len(self)
@@ -372,40 +357,6 @@ class Column(object):
 				res.append(el < other)
 			return Column(res)
 
-	def __ge__(self, other):
-		if isinstance(other, Column):
-			la = len(self)
-			lb = len(other)
-			if lb == la:
-				res = []
-				for i in range(la):
-					res.append(self.get_value(i) >= other[i])
-				return Column(res)
-			else:
-				raise ValueError('Column.__ge__ others Column len must be the same')
-		else:
-			res = []
-			for el in self.get_values():
-				res.append(el >= other)
-			return Column(res)
-
-	def __le__(self, other):
-		if isinstance(other, Column):
-			la = len(self)
-			lb = len(other)
-			if lb == la:
-				res = []
-				for i in range(la):
-					res.append(self.get_value(i) <= other[i])
-				return Column(res)
-			else:
-				raise ValueError('Column.__le__ others Column len must be the same')
-		else:
-			res = []
-			for el in self.get_values():
-				res.append(el <= other)
-			return Column(res)
-
 	def __eq__(self, other):
 		if isinstance(other, Column):
 			la = len(self)
@@ -421,21 +372,4 @@ class Column(object):
 			res = []
 			for el in self.get_values():
 				res.append(el == other)
-			return Column(res)
-
-	def __ne__(self, other):
-		if isinstance(other, Column):
-			la = len(self)
-			lb = len(other)
-			if lb == la:
-				res = []
-				for i in range(la):
-					res.append(self.get_value(i) != other[i])
-				return Column(res)
-			else:
-				raise ValueError('Column.__ne__ others Column len must be the same')
-		else:
-			res = []
-			for el in self.get_values():
-				res.append(el != other)
 			return Column(res)
