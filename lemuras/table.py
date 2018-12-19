@@ -465,23 +465,22 @@ class Table(object):
 		title = 'Unique values'
 		return Table(['Column', 'Counts'], rows, title)
 
-	def folds(self, fold_count, start=0):
+	def folds(self, fold_count):
 		# Note that rows of created Table objects are
 		# the same objects as in the original Table.
 		# And the method can return even the original object itself.
 		if fold_count < 2:
 			return [self]
-		end = start
+		begin = 0
+		end = 0
 		res = []
-		for i in range(fold_count + 1):
+		for i in range(fold_count):
 			begin = end
 			if i < fold_count:
 				end += int(self.rowcnt/fold_count)
-				data = self.rows[begin:end]
 			else:
 				end = self.rowcnt
-				data = self.rows[begin:end] + self.rows[:start]
-			res.append(Table(self.columns, data, 'Part {} of {}'.format(i+1, self.title)))
+			res.append(Table(self.columns, self.rows[begin:end], 'Part {} of {}'.format(i+1, self.title)))
 		return res
 
 	@classmethod
