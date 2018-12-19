@@ -37,7 +37,7 @@ class Column(object):
 			return self.values
 		else:
 			column_index = self.table.column_indices[self.source_name]
-			return list(map(lambda row: row[column_index], self.table.rows))
+			return map(lambda row: row[column_index], self.table.rows)
 
 	def get_value(self, row_index):
 		if self.values is not None:
@@ -139,11 +139,9 @@ class Column(object):
 		All the types can take a default value.
 		3. Returns an aggregated value.
 		"""
-		myvals = self.get_values()
-
 		if isinstance(task, str):
 			if task in aggfuns:
-				return aggfuns[task](myvals, *args)
+				return aggfuns[task](list(self.get_values()), *args)
 			elif task in typefuns:
 				task = typefuns[task]
 				# Continue function applying
@@ -153,7 +151,7 @@ class Column(object):
 		"""Returns this column with applied lambda or function to all the values.
 		The argument must be a function or a lambda expression."""
 		for i in range(len(self)):
-			self.set_value(i, task(myvals[i], *args))
+			self.set_value(i, task(self.get_value(i), *args))
 		return self
 
 	def __getattr__(self, attr):
@@ -166,28 +164,26 @@ class Column(object):
 
 	def copy(self):
 		"""Returns new Column as a deep copy of this one"""
-		return Column(values=self.get_values()[:], title=self.title)
+		return Column(values=list(self.get_values()), title=self.title)
 
 	def _repr_html_(self):
-		myvals = self.get_values()
 		n = len(self)
 		ns = False
 		if n > 12:
 			n = 10
 			ns = True
-		res = '<b>Column</b> object, title: "{}" values: {}.'.format(self.title, myvals[:n])
+		res = '<b>Column</b> object, title: "{}" values: {}.'.format(self.title, list(self.get_values())[:n])
 		if ns:
 			res += ' . .'
 		return res
 
 	def __repr__(self):
-		myvals = self.get_values()
 		n = len(self)
 		ns = False
 		if n > 12:
 			n = 10
 			ns = True
-		res = '- Column object, title: "{}" values: {}.'.format(self.title, myvals[:n])
+		res = '- Column object, title: "{}" values: {}.'.format(self.title, list(self.get_values())[:n])
 		if ns:
 			res += ' . .'
 		return res
