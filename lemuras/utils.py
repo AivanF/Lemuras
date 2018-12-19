@@ -23,13 +23,32 @@ lalepo = lambda x: len(x) > 0
 
 numbers_only = lambda lst: [x for x in lst if isinstance(x, numbers.Number)]
 
+existing_only = lambda lst: [x for x in lst if x is not None]
+
 
 def call_with_numbers_only(task):
 	"""Returns a function whuch takes a list and executes
 	argument function with numbers from that list.
 	"""
 	def inner(lst):
-		return task(numbers_only(lst))
+		lst = numbers_only(lst)
+		if len(lst) > 0:
+			return task(lst)
+		else:
+			return None
+	return inner
+
+
+def call_with_existing_only(task):
+	"""Returns a function whuch takes a list and executes
+	argument function with not-None values from that list.
+	"""
+	def inner(lst):
+		lst = existing_only(lst)
+		if len(lst) > 0:
+			return task(lst)
+		else:
+			return None
 	return inner
 
 

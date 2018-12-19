@@ -4,7 +4,7 @@ __contact__ = 'projects@aivanf.com'
 
 from datetime import date, datetime
 import numbers, math, functools
-from .utils import call_with_numbers_only
+from .utils import call_with_numbers_only, call_with_existing_only
 
 
 def mode(lst):
@@ -69,8 +69,8 @@ aggfuns = {
 	'q3': call_with_numbers_only(Q3),
 	'std': call_with_numbers_only(std),
 	'sum': call_with_numbers_only(sum),
-	'min': call_with_numbers_only(min),
-	'max': call_with_numbers_only(max),
+	'min': call_with_existing_only(min),
+	'max': call_with_existing_only(max),
 	'count': len,
 	'first': lambda x: x[0] if len(x) > 0 else None,
 	'last': lambda x: x[-1] if len(x) > 0 else None,

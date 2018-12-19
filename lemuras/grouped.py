@@ -32,7 +32,7 @@ class Grouped(object):
 		for el in keys:
 			self.gun.append(column_indices[el])
 
-		# Columns names of grouped rows
+		# Columns names of aggregating rows
 		self.columns = {}
 		# Whether old columns should be saved
 		self.column_indices = []
@@ -68,7 +68,7 @@ class Grouped(object):
 
 		# Save values with appropriate indices only - not key columns
 		step = 0
-		for i in range(len(self.columns)):
+		for i in range(len(row)):
 			if self.column_indices[i]:
 				# Columns-first structure
 				vals[step].append(row[i])
@@ -82,6 +82,7 @@ class Grouped(object):
 			for new_name in self.fun[target_name]:
 				task = self.fun[target_name][new_name]
 				if isinstance(task, str):
+					# print('Grouped {} -> {} Agg with {}'.format(target_name, new_name, task))
 					res.append(aggfuns[task](cur_col))
 				else:
 					res.append(task(cur_col))
