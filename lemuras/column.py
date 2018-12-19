@@ -135,6 +135,23 @@ class Column(object):
 				self.set_value(i, default)
 		return self
 
+	def folds(self, fold_count):
+		# Note that the method can return even the original Column itself.
+		if fold_count < 2:
+			return [self]
+		begin = 0
+		end = 0
+		res = []
+		values = list(self.get_values())
+		for i in range(fold_count):
+			begin = end
+			if i < fold_count:
+				end += int(len(values)/fold_count)
+			else:
+				end = len(values)
+			res.append(Column(values, 'Part {} of {}'.format(i+1, self.title)))
+		return res
+
 	def apply(self, task, *args):
 		""" Several cases are possible:
 		1. Applies function for each column value if a function is given.
