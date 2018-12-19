@@ -1,6 +1,6 @@
 # Lemuras
 
-Sometimes you cannot or don't want to use Pandas or similar advanced tool for data analysis, but still have a need to manipulate large tables with code. In such cases you can use **Lemuras** – it is a *pure Python* library in a single file without dependencies. And if you have some experience of Pandas or SQL, then you can easily work with Lemuras.
+Sometimes you cannot or don't want to use Pandas or similar advanced tool for data analysis, but still have a need to manipulate large tables with code. In such cases you can use **Lemuras** – it is a *pure Python* library without external dependencies. And if you have some experience of Pandas or SQL, then you can easily work with Lemuras.
 
 Again, this library may be considered as a simplified analogue of Pandas, but not as a replacement. However, Lemuras is capable of processing an operation on a few tables with several thousands of rows in less than a second.
 
@@ -51,9 +51,7 @@ The code of Lemuras is well-commented, so, you can find useful information there
 
 ## ToDos
 
-- Add `.nunique()` & `.value_counts()` methods.
-- Add examples for `Column.apply()` method (and ability to call `Column.task(*args)` instead of `Column.apply(task, *args)`).
-- Add examples for iterating `Column` & `Table`.
+The list [is available on GitHub](https://github.com/AivanF/Lemuras/issues/1).
 
 ## License
 
