@@ -248,27 +248,22 @@ class Table(object):
 	def apply(self, ind, task):
 		"""Applies lambda or function to all the column values.
 		First argument must be a name or an index of a column.
-		Second argument must be a function or a lambda expression."""
-
-		if isinstance(ind, str):
-			ind = self.column_indices[ind]
-		elif not isinstance(ind, int):
-			raise ValueError('Table.apply first argument must be either int or str!')
-		for row in self.rows:
-			row[ind] = task(row[ind])
+		Second argument must be a function or a lambda expression.
+		"""
+		# For compatibility
+		return self[ind].apply(task)
 
 	def loc(self, prism):
 		"""Returns new Table as filtered current one by given Column object with boolean values"""
 		if not isinstance(prism, Column):
 			raise ValueError('Table.loc takes one Column argument')
-		la = len(self.rows)
-		lb = len(prism)
-		if la != lb:
+		if len(self.rows) != len(prism):
 			raise ValueError('Table.loc arguments len must be the same')
 		res = []
-		for i in range(la):
-			if prism[i]:
+		for i, checker in enumerate(prism):
+			if checker:
 				res.append(self.rows[i])
+		# TODO: maybe make linked Table object?
 		return Table(self.columns[:], res, 'Filtered {}'.format(self.title))
 
 	def sort(self, cols, asc=True):

@@ -16,6 +16,5 @@ __license__ = """License:
  This notice may not be removed or altered from any source distribution."""
 name = 'lemuras'
 
-print('New Lemuras is here!')
 from .table import Table
 from .column import Column
