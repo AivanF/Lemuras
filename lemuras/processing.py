@@ -11,7 +11,7 @@ def mode(lst):
 	return max(set(lst), key=lst.count)
 
 
-def percentile(lst, percent):
+def percentile(lst, percent=0.5):
 	"""
 	Find the percentile of a list of values.
 
@@ -44,13 +44,14 @@ def avg(lst):
 		return 0
 
 
-def std(lst, ddof=0):
+def std(lst, ddof=0, mean=None):
 	"""Calculates the population standard deviation by default;
 	specify ddof=1 to compute the sample standard deviation."""
 	if len(lst) >= 1+ddof:
-		c = avg(lst)
+		if mean is None:
+			mean = avg(lst)
 		# Sum of square deviations
-		ss = sum((x-c)**2 for x in lst)
+		ss = sum((x-mean)**2 for x in lst)
 		# Dispersion
 		disp = ss / (len(lst) - ddof)
 		return disp ** 0.5
