@@ -87,7 +87,8 @@ class Table(object):
 		res = []
 		for row in self.rows:
 			res.append(row[column])
-		return Column(res, self.columns[column])
+		# return Column(res, self.columns[column])
+		return Column(values=None, title=self.columns[column], table=self, source_name=self.columns[column])
 
 	def set_column(self, column, data):
 		"""Sets values for existing column. First argument must be a column name or index.
