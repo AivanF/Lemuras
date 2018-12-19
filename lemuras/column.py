@@ -74,7 +74,9 @@ class Column(object):
 		elif cnt > 2048:
 			cnt = int(cnt / 2)
 
-		for el in self.get_values()[:cnt]:
+		for index, el in enumerate(self.get_values()):
+			if index >= cnt:
+				break
 			ln = max(ln, len(str(el)))
 
 			if isinstance(el, int):
