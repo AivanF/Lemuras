@@ -99,6 +99,15 @@ def tryDate(x, default=None):
 	return default
 
 
+typefuns = {
+	'str': makeStr,
+	'int': tryInt,
+	'float': tryFloat,
+	'date': tryDate,
+	'datetime': tryDatetime,
+}
+
+
 def parse_value(val, empty=''):
 	v = tryInt(val, None)
 	if v is not None:
@@ -119,15 +128,6 @@ def parse_value(val, empty=''):
 	if v == 'none' or v == 'null' or len(str(v)) == 0:
 		return empty
 	return val
-
-
-typefuns = {
-	'str': makeStr,
-	'int': tryInt,
-	'float': tryFloat,
-	'date': tryDate,
-	'datetime': tryDatetime,
-}
 
 
 def parse_row(lst, empty=''):
@@ -352,6 +352,14 @@ class Column(object):
 			# res.append(task(self.values[i]))
 		return self
 		# return Column(res)
+
+	def __getattr__(self, attr):
+		if attr in typefuns or attr in aggfuns:
+			def inner(*args):
+				return self.apply(attr, *args)
+			return inner
+		raise ValueError('Function was not found!')
+
 
 	def copy(self):
 		"""Returns new Column as a deep copy of this one"""

@@ -52,9 +52,8 @@ The code of Lemuras is well-commented, so, you can find useful information there
 ## ToDos
 
 - Add `.nunique()` & `.value_counts()` methods.
-- Add examples for `Column.apply()` method.
+- Add examples for `Column.apply()` method (and ability to call `Column.task(*args)` instead of `Column.apply(task, *args)`).
 - Add examples for iterating `Column` & `Table`.
-- Add ability to call `Column.apply(task, *args)` method as `Column.task(*args)`.
 
 ## License
 
