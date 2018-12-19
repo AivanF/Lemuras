@@ -3,7 +3,7 @@ __copyright__ = 'Copyright 2018, AivanF'
 __contact__ = 'projects@aivanf.com'
 
 from datetime import date, datetime
-import numbers
+import numbers, math, functools
 from .utils import call_with_numbers_only
 
 
@@ -11,14 +11,30 @@ def mode(lst):
 	return max(set(lst), key=lst.count)
 
 
-def median(lst):
-	n = len(lst)
-	if n < 1:
-		return None
-	if n % 2 == 1:
-		return sorted(lst)[n // 2]
-	else:
-		return sum(sorted(lst)[n // 2 - 1:n // 2 + 1]) / 2.0
+def percentile(lst, percent):
+	"""
+	Find the percentile of a list of values.
+
+	@parameter lst - is a list of values.
+	@parameter percent - a float value from 0.0 to 1.0.
+
+	@return - the percentile of the values
+	"""
+	lst = sorted(lst)
+	k = (len(lst)-1) * percent
+	f = math.floor(k)
+	c = math.ceil(k)
+	if f == c:
+		return lst[int(k)]
+	d0 = lst[int(f)] * (c-k)
+	d1 = lst[int(c)] * (k-f)
+	return d0+d1
+
+
+Q1 = functools.partial(percentile, percent=0.25)
+Q2 = functools.partial(percentile, percent=0.5)
+Q3 = functools.partial(percentile, percent=0.75)
+median = Q2
 
 
 def avg(lst):
@@ -48,6 +64,9 @@ aggfuns = {
 	'mode': call_with_numbers_only(mode),
 	'middle': call_with_numbers_only(median),
 	'median': call_with_numbers_only(median),
+	'q1': call_with_numbers_only(Q1),
+	'q2': call_with_numbers_only(Q2),
+	'q3': call_with_numbers_only(Q3),
 	'std': call_with_numbers_only(std),
 	'sum': call_with_numbers_only(sum),
 	'min': call_with_numbers_only(min),
