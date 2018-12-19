@@ -152,7 +152,7 @@ class Column(object):
 			res.append(Column(values, 'Part {} of {}'.format(i+1, self.title)))
 		return res
 
-	def apply(self, task, *args):
+	def apply(self, task, *args, **kwargs):
 		""" Several cases are possible:
 		1. Applies function for each column value if a function is given.
 		2. Changes elements types if type name is given.
@@ -162,7 +162,7 @@ class Column(object):
 		"""
 		if isinstance(task, str):
 			if task in aggfuns:
-				return aggfuns[task](list(self.get_values()), *args)
+				return aggfuns[task](list(self.get_values()), *args, **kwargs)
 			elif task in typefuns:
 				task = typefuns[task]
 				# Continue function applying
@@ -177,8 +177,8 @@ class Column(object):
 
 	def __getattr__(self, attr):
 		if attr in typefuns or attr in aggfuns:
-			def inner(*args):
-				return self.apply(attr, *args)
+			def inner(*args, **kwargs):
+				return self.apply(attr, *args, **kwargs)
 			return inner
 		raise ValueError('Function was not found!')
 
