@@ -2,24 +2,23 @@
 
 Sometimes you cannot or don't want to use Pandas or similar advanced tool for data analysis, but still have a need to manipulate large tables with code. In such cases you can use **Lemuras** – it is a *pure Python* library without external dependencies. And if you have some experience of Pandas or SQL, then you can easily work with Lemuras.
 
-Again, this library may be considered as a simplified analogue of Pandas, but not as a replacement. However, Lemuras is capable of processing an operation on a few tables with several thousands of rows in less than a second.
+Again, this library may be considered as a simplified analogue of Pandas, but not as a replacement. However, Lemuras is capable of processing an operation on a few tables with several thousands of rows in less than a second on a simple web server. So, if you need a tiny library to generate analytical reports or convert table formats, Lemuras is a good choice!
 
 ![logo](http://www.aivanf.com/static/cv/lemuras.png)
 
 ## Features
 
 - Integration with *Jupyter IPython Notebook*: Lemuras objects are printed as nice tables.
-- Most of the syntax is very similar to *Pandas*.
-- Automatic columns types detection.
 - Save / load **CSV files**, **JSON**, **HTML** tables, **SQL** (both query result and table creation code).
+- Automatic columns types detection, simple type conversion.
 - Cells access, rows, columns adding, deleting, columns renaming, functions/lambdas applying, rows sorting.
-- Dealing with **columns**: you can take a table column, do math with the values, compare, check existing in other column or list, then filter a table by it or add it to a table, etc.
-- **Grouping by** *none*, *one*, or *multiple columns*, **aggregation** with *built-in* or *user-defined functions and lambdas*.
+- Advanced processing of **columns**: you can take any table column, apply any function or lambda, do math with several columns and discrete values, compare them, check existing in other columns or lists, filter a table by it or add it to a table, etc... In other words, you can do anything!
+- **Grouping by** *none*, *one*, or *multiple columns*, **aggregation** with *built-in* or *user-defined functions and lambdas* for specified or just all the columns.
 - **Merge** (**Join**): *inner / left / right / outer*.
 - **Tables concatenation** and **appending**.
 - **Pivot tables** creation.
 
-It was tasted on both Python **2.7.13** and Python **3.6.0**.
+It was tasted on both Python **2.7** and Python **3.6**
 
 
 ## Installation 
