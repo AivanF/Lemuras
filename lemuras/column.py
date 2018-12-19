@@ -135,24 +135,25 @@ class Column(object):
 				self.set_value(i, default)
 		return self
 
-	def folds(self, fold_count):
+	def folds(self, fold_count, start=0):
 		# Note that the method can return even the original Column itself.
 		if fold_count < 2:
 			return [self]
-		begin = 0
-		end = 0
+		end = start
 		res = []
 		values = list(self.get_values())
-		for i in range(fold_count):
+		for i in range(fold_count + 1):
 			begin = end
 			if i < fold_count:
 				end += int(len(values)/fold_count)
+				data = values[begin:end]
 			else:
 				end = len(values)
-			res.append(Column(values, 'Part {} of {}'.format(i+1, self.title)))
+				data = values[begin:end] + values[:start]
+			res.append(Column(data, 'Part {} of {}'.format(i+1, self.title)))
 		return res
 
-	def apply(self, task, *args):
+	def apply(self, task, *args, **kwargs):
 		""" Several cases are possible:
 		1. Applies function for each column value if a function is given.
 		2. Changes elements types if type name is given.
@@ -162,7 +163,7 @@ class Column(object):
 		"""
 		if isinstance(task, str):
 			if task in aggfuns:
-				return aggfuns[task](list(self.get_values()), *args)
+				return aggfuns[task](list(self.get_values()), *args, **kwargs)
 			elif task in typefuns:
 				task = typefuns[task]
 				# Continue function applying
@@ -177,8 +178,8 @@ class Column(object):
 
 	def __getattr__(self, attr):
 		if attr in typefuns or attr in aggfuns:
-			def inner(*args):
-				return self.apply(attr, *args)
+			def inner(*args, **kwargs):
+				return self.apply(attr, *args, **kwargs)
 			return inner
 		raise ValueError('Function was not found!')
 
