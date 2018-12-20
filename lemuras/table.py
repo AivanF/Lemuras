@@ -163,6 +163,13 @@ class Table(object):
 		else:
 			self.add_column(data, column)
 
+	@classmethod
+	def from_columns(cls, columns, title='From columns'):
+		res = Table([], [], title)
+		for col in columns:
+			res.add_column(col)
+		return res
+
 	def row(self, row_index=0):
 		"""Returns a list with row values."""
 		return self.rows[row_index][:]
