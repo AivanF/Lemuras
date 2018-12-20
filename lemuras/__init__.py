@@ -1,7 +1,6 @@
 __author__ = 'AivanF'
 __copyright__ = 'Copyright 2018, AivanF'
 __contact__ = 'projects@aivanf.com'
-__version__ = '1.1.9'
 __license__ = """License:
  This software is provided 'as-is', without any express or implied warranty.
  You may not hold the author liable.
