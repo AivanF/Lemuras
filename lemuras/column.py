@@ -153,12 +153,18 @@ class Column(object):
 
 	def apply(self, task, *args, **kwargs):
 		""" Several cases are possible:
-		1. Applies function for each column value if a function is given.
+		1. Applies function for each column value if a function or lambda is given.
 		2. Changes elements types if type name is given.
 		The following are supported: str, int, float, date, datetime.
 		All the types can take a default value.
 		3. Returns an aggregated value.
 		"""
+		# Default KW argument after variable with positional arguments
+		# is allowed in Python 3 only, not Python 2
+		# apply(self, task, *args, separate=False, **kwargs)
+		# So, we have to handle it manually
+		separate = kwargs.pop('separate', False)
+
 		if isinstance(task, str):
 			if task in aggfuns:
 				return aggfuns[task](list(self.get_values()), *args, **kwargs)
@@ -167,12 +173,16 @@ class Column(object):
 				# Continue function applying
 			else:
 				raise ValueError('Applied function named "{}" does not exist!'.format(task))
-	
-		"""Returns this column with applied lambda or function to all the values.
-		The argument must be a function or a lambda expression."""
-		for i in range(len(self)):
-			self.set_value(i, task(self.get_value(i), *args))
-		return self
+
+		if separate:
+			res = []
+			for i in range(len(self)):
+				res.append(task(self.get_value(i), *args, **kwargs))
+			return Column(res, self.title)
+		else:
+			for i in range(len(self)):
+				self.set_value(i, task(self.get_value(i), *args, **kwargs))
+			return self
 
 	def __getattr__(self, attr):
 		if attr in typefuns or attr in aggfuns:
