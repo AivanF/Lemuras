@@ -20,6 +20,7 @@ import re
 import csv
 import json
 from .utils import file_container, BeautifulSoup, iscollection, jsonable, lalepo
+from .processing import parse_value, parse_row, aggfuns, applyfuns
 from .column import Column
 
 
@@ -245,13 +246,9 @@ class Table(object):
 		else:
 			print('Table.rename on incorrect column {}'.format(oldname))
 
-	def apply(self, ind, task):
-		"""Applies lambda or function to all the column values.
-		First argument must be a name or an index of a column.
-		Second argument must be a function or a lambda expression.
-		"""
-		# For compatibility
-		return self[ind].apply(task)
+	def apply(self, ind, task, *args, **kwargs):
+		# For compatibility with old versions
+		return self[ind].apply(task, *args, **kwargs)
 
 	def loc(self, prism):
 		"""Returns new Table as filtered current one by given Column object with boolean values"""
@@ -454,16 +451,31 @@ class Table(object):
 		title = 'Merged {} {} & {}'.format(how, tl.title, tr.title)
 		return Table(rescol, resrow, title)
 
-	def nunique(self):
-		"""Returns new Table object with counts of unique values in columns of this Table."""
-		rows = []
-		for el in self.columns:
-			col = self.column(el)
-			cnt = col.nunique()
-			rows.append([ el, cnt ])
-		# title = 'Unique values in ' + self.title
-		title = 'Unique values'
-		return Table(['Column', 'Counts'], rows, title)
+	def __getattr__(self, attr):
+		"""Returns new Table object applied aggregation function to all the columns."""
+		if attr in aggfuns:
+			def inner(*args, **kwargs):
+				rows = []
+				for col in self.columns:
+					val = self[col].apply(attr, *args, **kwargs) 
+					rows.append([ col, val ])
+				title = '{}.{}()'.format(self.title, attr)
+				return Table(['Column', attr], rows, title)
+			return inner
+		elif attr in applyfuns:
+			def inner(separate=False, *args, **kwargs):
+				title = '{}.{}()'.format(self.title, attr)
+				if separate:
+					columns = [self[col].apply(attr, separate=True, *args, **kwargs) for col in self.columns]
+					return Table.from_columns(columns, title=title)
+				else:
+					for col in self.columns:
+						self[col].apply(attr, *args, **kwargs) 
+					self.title = title
+					return self
+			return inner
+		else:
+			raise ValueError('Applied function named "{}" does not exist!'.format(attr))
 
 	def folds(self, fold_count, start=0):
 		# Note that rows of created Table objects are
