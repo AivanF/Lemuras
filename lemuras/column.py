@@ -16,7 +16,7 @@ __license__ = """License:
  This notice may not be removed or altered from any source distribution."""
 
 from datetime import date, datetime
-from .processing import typefuns, aggfuns
+from .processing import applyfuns, aggfuns
 
 
 class Column(object):
@@ -102,37 +102,6 @@ class Column(object):
 
 		return tp, ln
 
-	def isin(self, other):
-		"""Returns new Column object with boolean whether the current values are in other object.
-		The other object may be a list, a Column, or anything else with .__contains__ method."""
-		res = []
-		for a in self.get_values():
-			v = False
-			for b in other:
-				if a == b:
-					v = True
-					break
-			res.append(v)
-		return Column(res)
-
-	def lengths(self):
-		"""Returns new Column object with applied len to str of the values."""
-		res = []
-		for el in self.get_values():
-			res.append(len(str(el)))
-		return Column(res)
-
-	def nunique(self):
-		"""Returns number of unique values."""
-		return len(set(self.get_values()))
-
-	def none_to(self, default=0):
-		"""Replaces None elements with a given value."""
-		for i in range(len(self)):
-			if self.get_value(i) is None:
-				self.set_value(i, default)
-		return self
-
 	def folds(self, fold_count, start=0):
 		# Note that the method can return even the original Column itself.
 		if fold_count < 2:
@@ -168,8 +137,8 @@ class Column(object):
 		if isinstance(task, str):
 			if task in aggfuns:
 				return aggfuns[task](list(self.get_values()), *args, **kwargs)
-			elif task in typefuns:
-				task = typefuns[task]
+			elif task in applyfuns:
+				task = applyfuns[task]
 				# Continue function applying
 			else:
 				raise ValueError('Applied function named "{}" does not exist!'.format(task))
@@ -185,11 +154,12 @@ class Column(object):
 			return self
 
 	def __getattr__(self, attr):
-		if attr in typefuns or attr in aggfuns:
+		if attr in applyfuns or attr in aggfuns:
 			def inner(*args, **kwargs):
 				return self.apply(attr, *args, **kwargs)
 			return inner
-		raise ValueError('Function was not found!')
+		else:
+			raise ValueError('Applied function named "{}" does not exist!'.format(attr))
 
 
 	def copy(self):

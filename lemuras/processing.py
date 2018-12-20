@@ -59,6 +59,10 @@ def std(lst, ddof=0, mean=None):
 		return 0
 
 
+def nunique(lst):
+	return len(set(lst))
+
+
 aggfuns = {
 	'avg': call_with_numbers_only(avg),
 	'mean': call_with_numbers_only(avg),
@@ -75,6 +79,7 @@ aggfuns = {
 	'count': len,
 	'first': lambda x: x[0] if len(x) > 0 else None,
 	'last': lambda x: x[-1] if len(x) > 0 else None,
+	'nunique': nunique,
 }
 
 
@@ -133,12 +138,37 @@ def tryDate(x, default=None):
 	return default
 
 
-typefuns = {
+def none_to(x, default=0):
+	return default if x is None else x
+
+
+def isnull(x):
+	return x is None
+
+
+def lengths(x, strings_only=False):
+	if strings_only and not isinstance(x, str):
+		return None
+	return len(str(x))
+
+
+def isin(x, other):
+	return x in other
+
+
+applyfuns = {
 	'str': makeStr,
 	'int': tryInt,
 	'float': tryFloat,
 	'date': tryDate,
 	'datetime': tryDatetime,
+
+	'none_to': none_to,
+	'isnull': isnull,
+	'lengths': lengths,
+	'isin': isin,
+	'istype': isinstance,
+	'isinstance': isinstance,
 }
 
 
