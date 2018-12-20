@@ -166,7 +166,7 @@ class Grouped(object):
 		rows = []
 		todo = lambda x, y: rows.append(x + [len(y[0])])
 		self.__recurs__(self.values, [], todo)
-		return Table(self.keys + ['counts'], rows, 'Groups')
+		return Table(self.keys + ['rows'], rows, 'Groups')
 
 	def _repr_html_(self):
 		res = '<b>Grouped</b> object, keys: {}, old columns: {}.<br>\n'.format(

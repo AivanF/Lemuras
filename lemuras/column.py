@@ -20,7 +20,7 @@ from .processing import applyfuns, aggfuns
 
 
 class Column(object):
-	def __init__(self, values=None, title='-', table=None, source_name=None):
+	def __init__(self, values=None, title='NoName', table=None, source_name=None):
 		if values is None and table is None:
 			raise ValueError('Either values or table must be not None!')
 		if values is not None and table is not None:
@@ -55,11 +55,6 @@ class Column(object):
 
 	def __iter__(self):
 		return iter(self.get_values())
-
-	# TODO: check it for deleting
-	# @classmethod
-	# def make(cls, size, values=None, title='-'):
-	# 	return Column([values] * size, title)
 
 	def get_type(self):
 		"""Returns column type and max symbols length."""
@@ -109,14 +104,16 @@ class Column(object):
 		end = start
 		res = []
 		values = list(self.get_values())
-		for i in range(fold_count + 1):
+		for i in range(fold_count):
 			begin = end
-			if i < fold_count:
+			if i < fold_count - 1:
 				end += int(len(values)/fold_count)
 				data = values[begin:end]
+				# print('[{}:{}]'.format(begin, end))
 			else:
 				end = len(values)
 				data = values[begin:end] + values[:start]
+				# print('[{}:{}] + [:{}]'.format(begin, end, start))
 			res.append(Column(data, 'Part {} of {}'.format(i+1, self.title)))
 		return res
 

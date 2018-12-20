@@ -20,15 +20,15 @@ import re
 import csv
 import json
 from .utils import file_container, BeautifulSoup, iscollection, jsonable, lalepo
-from .processing import parse_value, parse_row
 from .column import Column
 
 
-def repr_cell(x):
+def repr_cell(x, quote_strings=False):
 	if isinstance(x, datetime.date):
 		return str(x)
-	else:
-		return repr(x)
+	if not quote_strings and isinstance(x, str):
+		return x
+	return repr(x)
 
 
 class Table(object):
@@ -473,14 +473,16 @@ class Table(object):
 			return [self]
 		end = start
 		res = []
-		for i in range(fold_count + 1):
+		for i in range(fold_count):
 			begin = end
-			if i < fold_count:
+			if i < fold_count - 1:
 				end += int(self.rowcnt/fold_count)
 				data = self.rows[begin:end]
+				# print('[{}:{}]'.format(begin, end))
 			else:
 				end = self.rowcnt
 				data = self.rows[begin:end] + self.rows[:start]
+				# print('[{}:{}] + [:{}]'.format(begin, end, start))
 			res.append(Table(self.columns, data, 'Part {} of {}'.format(i+1, self.title)))
 		return res
 
@@ -744,11 +746,11 @@ class Table(object):
 	def __str__(self):
 		showrowscnt, showcolscnt, hiddenrows, hiddencols = self.__need_cut__()
 		res = '- Table object, title: "{}", {} columns, {} rows.\n'.format(self.title, len(self.columns), len(self.rows))
-		res += ' '.join(map(lambda x: repr(x), self.columns[:showcolscnt]))
+		res += ' '.join(map(lambda x: repr_cell(x, quote_strings=True), self.columns[:showcolscnt]))
 		if hiddencols:
 			res += ' ...'
 		for row in self.rows[:showrowscnt]:
-			res += '\n' + ' '.join(map(lambda x: repr_cell(x), row[:showcolscnt]))
+			res += '\n' + ' '.join(map(lambda x: repr_cell(x, quote_strings=True), row[:showcolscnt]))
 		if hiddenrows:
 			res += '\n. . .'
 		return res
@@ -756,7 +758,7 @@ class Table(object):
 	def html(self, cut=True):
 		showrowscnt, showcolscnt, hiddenrows, hiddencols = self.__need_cut__(cut)
 		res = '<table>\n<tr><th>'
-		res += '</th><th>'.join(map(lambda x: repr(x), self.columns[:showcolscnt]))
+		res += '</th><th>'.join(map(lambda x: repr_cell(x), self.columns[:showcolscnt]))
 		if hiddencols:
 			res += '</th><th>...'
 		res += '</th></tr>\n'
