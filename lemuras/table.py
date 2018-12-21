@@ -18,7 +18,7 @@ import datetime
 import re
 import csv
 import json
-from .utils import file_container, BeautifulSoup, iscollection, jsonable, lalepo
+from .utils import main_str, file_container, BeautifulSoup, iscollection, jsonable, lalepo
 from .processing import parse_value, parse_row, aggfuns, applyfuns
 from .column import Column
 
@@ -26,7 +26,7 @@ from .column import Column
 def repr_cell(x, quote_strings=False):
 	if isinstance(x, datetime.date):
 		return str(x)
-	if not quote_strings and isinstance(x, str):
+	if not quote_strings and isinstance(x, main_str):
 		return x
 	return repr(x)
 

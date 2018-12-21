@@ -8,9 +8,11 @@ import sys
 if sys.version_info[0] == 2:
 	from io import BytesIO
 	file_container = lambda x: BytesIO(bytes(x))
+	main_str = basestring
 else:
 	from io import StringIO
 	file_container = lambda x: StringIO(x)
+	main_str = str
 
 try:
 	from bs4 import BeautifulSoup

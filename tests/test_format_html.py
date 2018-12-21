@@ -26,7 +26,8 @@ class TestLemurasHtml(unittest.TestCase):
 		self.assertEqual(df1['Value'].sum(), 7.4779084706)
 
 	def test_save(self):
-		df2 = Table.from_html(Table.from_html(html_table).html(), title='Numbers')
+		txt = Table.from_html(html_table).html()
+		df2 = Table.from_html(txt, title='Numbers')
 		self.assertEqual(df2.columns, ['Name', 'Value'])
 		self.assertEqual(df2.rowcnt, 3)
 		self.assertEqual(df2['Value'].sum(), 7.4779084706)
