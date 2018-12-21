@@ -45,7 +45,7 @@ In addition, there is one complex example of solving a real-life problem:
 
 - [Retargeting results report](https://github.com/AivanF/Lemuras/blob/master/examples/Complex%20Example%20-%20Retargeting%20results%20report.ipynb)
 
-The code of Lemuras is well-commented, so, you can find useful information there. Contributions are welcome.
+The code of Lemuras is well-commented, also there are many unit-tests, so, you can easily find useful information there. Contributions are welcome.
 
 
 ## ToDos

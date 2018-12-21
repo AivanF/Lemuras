@@ -162,8 +162,8 @@ applyfuns = {
 	'float': tryFloat,
 	'date': tryDate,
 	'datetime': tryDatetime,
-
 	'none_to': none_to,
+
 	'isnull': isnull,
 	'lengths': lengths,
 	'isin': isin,
