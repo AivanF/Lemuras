@@ -1,4 +1,4 @@
-# Lemuras
+# Lemuras [![Build Status](https://api.travis-ci.com/AivanF/Lemuras.svg?branch=master)](https://travis-ci.com/AivanF/Lemuras/)
 
 Sometimes you cannot or don't want to use Pandas or similar advanced tool for data analysis, but still have a need to manipulate large tables with code. In such cases you can use **Lemuras** – it is a *pure Python* library without external dependencies. And if you have some experience of Pandas or SQL, then you can easily work with Lemuras.
 
