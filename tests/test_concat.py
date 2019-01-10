@@ -38,7 +38,3 @@ class TestLemurasConcat(unittest.TestCase):
 		self.assertEqual((df1['tel']==trash).sum(), 0)
 		self.assertEqual((df2['tel']==trash).sum(), 0)
 		self.assertEqual((df3['tel']==trash).sum(), 2)
-
-
-if __name__ == '__main__':
-	unittest.main()

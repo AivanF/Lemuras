@@ -24,7 +24,3 @@ class TestLemurasCsv(unittest.TestCase):
 		self.assertEqual(df2.cell(1, 1), 'Fouren')
 		self.assertEqual(df2.rowcnt, 2)
 		self.assertEqual(df2['ID'].sum(), 58597)
-
-
-if __name__ == '__main__':
-	unittest.main()

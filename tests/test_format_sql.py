@@ -45,8 +45,3 @@ class TestLemurasSql(unittest.TestCase):
 		self.assertEqual(df2.columns, ['id', 'name', 'q1', 'q2', 'q3'])
 		self.assertEqual(df2.rowcnt, 8)
 		self.assertEqual(df2['id'].sum(), 19169)
-
-
-if __name__ == '__main__':
-	unittest.main()
-

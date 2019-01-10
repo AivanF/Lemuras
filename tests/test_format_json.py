@@ -21,7 +21,3 @@ class TestLemurasJson(unittest.TestCase):
 		self.assertEqual(df2.columns, cols)
 		self.assertEqual(df2.rowcnt, len(rows))
 		self.assertEqual(df2['weight'].sum(), 74)
-
-
-if __name__ == '__main__':
-	unittest.main()

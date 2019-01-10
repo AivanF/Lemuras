@@ -34,7 +34,3 @@ class TestLemurasMerge(unittest.TestCase):
 	def test_values(self):
 		self.assertEqual(self.df3.nunique()[1].sum(), 22)
 		self.assertEqual(self.df3['weight'].sum(), 74)
-
-
-if __name__ == '__main__':
-	unittest.main()

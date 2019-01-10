@@ -51,7 +51,3 @@ class TestLemurasGroupby(unittest.TestCase):
 		self.assertEqual(df2.rowcnt, 1)
 		self.assertEqual(df2.cell('Count'), 6)
 		self.assertEqual(df2.cell('Value'), 60)
-
-
-if __name__ == '__main__':
-	unittest.main()

@@ -31,7 +31,3 @@ class TestLemurasHtml(unittest.TestCase):
 		self.assertEqual(df2.columns, ['Name', 'Value'])
 		self.assertEqual(df2.rowcnt, 3)
 		self.assertEqual(df2['Value'].sum(), 7.4779084706)
-
-
-if __name__ == '__main__':
-	unittest.main()
