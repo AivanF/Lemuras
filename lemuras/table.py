@@ -391,10 +391,10 @@ class Table(object):
 		usedrowsleft = [False] * tl.rowcnt
 		usedrowsright = [False] * tr.rowcnt
 
-		for i in range(tl.rowcnt):
-			rl = tl.rows[i]
-			for j in range(tr.rowcnt):
-				rr = tr.rows[j]
+		for row_index in range(tl.rowcnt):
+			rl = tl.rows[row_index]
+			for r2_index in range(tr.rowcnt):
+				rr = tr.rows[r2_index]
 				match = True
 				# Check all keys are the same
 				for el in keys:
@@ -405,8 +405,8 @@ class Table(object):
 				if match:
 					# Mark the matched rows
 					# so they won't be used in left / right / outer
-					usedrowsleft[i] = True
-					usedrowsright[j] = True
+					usedrowsleft[row_index] = True
+					usedrowsright[r2_index] = True
 
 					row = []
 					# Add all the left side
@@ -414,21 +414,21 @@ class Table(object):
 						row.append(el)
 					# Add right side if not keys
 					# they are already in left side
-					for k in range(tr.colcnt):
+					for column_index in range(tr.colcnt):
 						if rightcol2key[k] is None:
 							row.append(rr[k])
 					resrow.append(row)
 
 		if doleft:
-			for i in range(tl.rowcnt):
+			for row_index in range(tl.rowcnt):
 				# Add the row if it wasn't used in inner
-				if not usedrowsleft[i]:
+				if not usedrowsleft[row_index]:
 					row = []
 					# Fill left side with values
-					for el in tl.rows[i]:
+					for el in tl.rows[row_index]:
 						row.append(el)
 					# Fill right side with empty
-					for k in range(tr.colcnt):
+					for column_index in range(tr.colcnt):
 						# Key are already in the left side
 						if rightcol2key[k] is None:
 							# If not a key, just add the value
@@ -436,16 +436,16 @@ class Table(object):
 					resrow.append(row)
 
 		if doright:
-			for i in range(tr.rowcnt):
+			for row_index in range(tr.rowcnt):
 				# Add the row if it wasn't used in inner
-				if not usedrowsright[i]:
+				if not usedrowsright[row_index]:
 					row = []
 					# Fill left side with empty
-					for i in range(tl.colcnt):
+					for column_index in range(tl.colcnt):
 						row.append(empty)
-					rr = tr.rows[i]
+					rr = tr.rows[row_index]
 					# Fill right side with values
-					for k in range(tr.colcnt):
+					for column_index in range(tr.colcnt):
 						if rightcol2key[k] is None:
 							# If not a key, just add the value
 							row.append(rr[k])
