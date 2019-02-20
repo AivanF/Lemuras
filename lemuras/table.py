@@ -31,6 +31,50 @@ def repr_cell(x, quote_strings=False):
 	return repr(x)
 
 
+class Row(object):
+	def __init__(self, table, row_index):
+		self.table = table
+		self.row_index = row_index
+
+	def __iter__(self):
+		return self
+
+	def __next__(self):
+		self.idx += 1
+		try:
+			return self[self.idx-1]
+		except IndexError:
+			self.idx = 0
+			raise StopIteration
+	
+	# Python 2.x compatibility
+	next = __next__
+
+	@property
+	def columns(self):
+		return self.table.columns
+
+	def __getitem__(self, column):
+		return self.table.cell(column, self.row_index)
+
+	def __setitem__(self, column, value):
+		if column in self.columns:
+			self.set_cell(column, self.row_index, value)
+		else:
+			self.set_cell(column, self.row_index, value)
+
+	def __len__(self):
+		"""Returns number of columns."""
+		return self.table.colcnt
+
+	def __str__(self):
+		# return str(self.table.rows[self.row_index][:])
+		return ','.join(map(lambda x: repr_cell(x, quote_strings=True), self.table.rows[self.row_index]))
+
+	def __repr__(self):
+		return self.__str__()
+
+
 class Table(object):
 	def __init__(self, columns, rows, title=None):
 		self.columns = columns
@@ -170,8 +214,8 @@ class Table(object):
 		return res
 
 	def row(self, row_index=0):
-		"""Returns a list with row values."""
-		return self.rows[row_index][:]
+		"""Returns a Row object."""
+		return Row(self, row_index)
 
 	def row_named(self, row_index=0):
 		"""Returns a dictionary with row values."""
@@ -255,6 +299,14 @@ class Table(object):
 	def apply(self, ind, task, *args, **kwargs):
 		# For compatibility with old versions
 		return self[ind].apply(task, *args, **kwargs)
+
+	def handle(self, task, *args, **kwargs):
+		res = []
+		row = Row(self, 0)
+		for i in range(self.rowcnt):
+			row.row_index = i
+			res.append(task(row, *args, **kwargs))
+		return Column(res, 'Handled')
 
 	def loc(self, prism):
 		"""Returns new Table as filtered current one by given Column object with boolean values"""
