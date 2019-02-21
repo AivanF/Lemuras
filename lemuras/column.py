@@ -15,7 +15,7 @@ __license__ = """License:
  This notice may not be removed or altered from any source distribution."""
 
 from datetime import date, datetime
-from .processing import applyfuns, aggfuns
+from .processing import applyfuns, typefuns, aggfuns
 
 
 class Column(object):
@@ -51,6 +51,12 @@ class Column(object):
 		else:
 			column_index = self.table.column_indices[self.source_name]
 			self.table.rows[row_index][column_index] = value
+
+	def __getitem__(self, index):
+		return self.get_value(index)
+
+	def __setitem__(self, row_index, value):
+		self.set_value(row_index, value)
 
 	def __iter__(self):
 		return iter(self.get_values())
@@ -118,26 +124,29 @@ class Column(object):
 
 	def apply(self, task, *args, **kwargs):
 		""" Several cases are possible:
-		1. Applies function for each column value if a function or lambda is given.
-		2. Changes elements types if type name is given.
+		1. Changes column values types if type name is given.
 		The following are supported: str, int, float, date, datetime.
 		All the types can take a default value.
-		3. Returns an aggregated value.
+		2. Returns new columns with applied function.
 		"""
 		# Default KW argument after variable with positional arguments
 		# is allowed in Python 3 only, not Python 2
 		# apply(self, task, *args, separate=False, **kwargs)
 		# So, we have to handle it manually
-		separate = kwargs.pop('separate', False)
+		separate = kwargs.pop('separate', None)
 
 		if isinstance(task, str):
-			if task in aggfuns:
-				return aggfuns[task](list(self.get_values()), *args, **kwargs)
+			if task in typefuns:
+				task = typefuns[task]
+				separate = False if separate is None else separate
 			elif task in applyfuns:
 				task = applyfuns[task]
-				# Continue function applying
+				separate = True if separate is None else separate
 			else:
 				raise ValueError('Applied function named "{}" does not exist!'.format(task))
+		else:
+			# Custom functions lead to new Column object by default
+			separate = True if separate is None else separate
 
 		if separate:
 			res = []
@@ -149,13 +158,27 @@ class Column(object):
 				self.set_value(i, task(self.get_value(i), *args, **kwargs))
 			return self
 
+	def calc(self, task, *args, **kwargs):
+		""" Calculates an aggregated value by function or task name.
+		"""
+		if isinstance(task, str):
+			if task in aggfuns:
+				task = aggfuns[task]
+			else:
+				raise ValueError('Applied function named "{}" does not exist!'.format(task))
+		return task(list(self.get_values()), *args, **kwargs)
+
 	def __getattr__(self, attr):
-		if attr in applyfuns or attr in aggfuns:
+		if attr in applyfuns or attr in typefuns:
 			def inner(*args, **kwargs):
 				return self.apply(attr, *args, **kwargs)
 			return inner
+		elif attr in aggfuns:
+			def inner(*args, **kwargs):
+				return self.calc(attr, *args, **kwargs)
+			return inner
 		else:
-			raise ValueError('Applied function named "{}" does not exist!'.format(attr))
+			raise AttributeError('Applied function named "{}" does not exist!'.format(attr))
 
 
 	def copy(self):
@@ -183,9 +206,6 @@ class Column(object):
 		if ns:
 			res += ' . .'
 		return res
-
-	def __getitem__(self, index):
-		return self.get_value(index)
 
 	def __len__(self):
 		if self.values is not None:

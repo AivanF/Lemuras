@@ -19,7 +19,7 @@ import re
 import csv
 import json
 from .utils import main_str, file_container, BeautifulSoup, iscollection, jsonable, lalepo
-from .processing import parse_value, parse_row, aggfuns, applyfuns
+from .processing import parse_value, parse_row, aggfuns, typefuns, applyfuns
 from .column import Column
 
 
@@ -35,6 +35,7 @@ class Row(object):
 	def __init__(self, table, row_index):
 		self.table = table
 		self.row_index = row_index
+		self.idx = 0
 
 	def __iter__(self):
 		return self
@@ -59,17 +60,17 @@ class Row(object):
 
 	def __setitem__(self, column, value):
 		if column in self.columns:
-			self.set_cell(column, self.row_index, value)
+			self.table.set_cell(column, self.row_index, value)
 		else:
-			self.set_cell(column, self.row_index, value)
+			self.table.set_cell(column, self.row_index, value)
 
 	def __len__(self):
 		"""Returns number of columns."""
 		return self.table.colcnt
 
 	def __str__(self):
-		# return str(self.table.rows[self.row_index][:])
-		return ','.join(map(lambda x: repr_cell(x, quote_strings=True), self.table.rows[self.row_index]))
+		values = map(lambda x: repr_cell(x, quote_strings=True), self.table.rows[self.row_index])
+		return '[{}]'.format(','.join(values))
 
 	def __repr__(self):
 		return self.__str__()
@@ -128,10 +129,9 @@ class Table(object):
 
 		if isinstance(column, str):
 			column = self.column_indices[column]
-		res = []
-		for row in self.rows:
-			res.append(row[column])
-		# return Column(res, self.columns[column])
+		# Deep copy:
+		# return Column([row[column] for row in self.rows], self.columns[column])
+		# Proxy object:
 		return Column(values=None, title=self.columns[column], table=self, source_name=self.columns[column])
 
 	def set_column(self, column, data):
@@ -300,26 +300,34 @@ class Table(object):
 		# For compatibility with old versions
 		return self[ind].apply(task, *args, **kwargs)
 
-	def handle(self, task, *args, **kwargs):
+	def calc(self, task, *args, **kwargs):
 		res = []
 		row = Row(self, 0)
 		for i in range(self.rowcnt):
 			row.row_index = i
 			res.append(task(row, *args, **kwargs))
-		return Column(res, 'Handled')
+		return Column(res, 'Calc')
 
-	def loc(self, prism):
+	def loc(self, prism, separate=False):
 		"""Returns new Table as filtered current one by given Column object with boolean values"""
 		if not isinstance(prism, Column):
 			raise ValueError('Table.loc takes one Column argument')
 		if len(self.rows) != len(prism):
-			raise ValueError('Table.loc arguments len must be the same')
+			raise ValueError('Table.loc argument len must be the same')
 		res = []
 		for i, checker in enumerate(prism):
 			if checker:
-				res.append(self.rows[i])
-		# TODO: maybe make linked Table object?
-		return Table(self.columns[:], res, 'Filtered {}'.format(self.title))
+				if separate:
+					res.append(self.rows[i][:])
+				else:
+					res.append(self.rows[i])
+		title = 'Filtered {}'.format(self.title)
+		if separate:
+			title += ' Copy'
+			columns = self.columns[:]
+		else:
+			columns = self.columns
+		return Table(columns, res, title)
 
 	def sort(self, cols, asc=True):
 		"""Sorts rows in place.
@@ -510,30 +518,37 @@ class Table(object):
 		return Table(rescol, resrow, title)
 
 	def __getattr__(self, attr):
-		"""Returns new Table object applied aggregation function to all the columns."""
 		if attr in aggfuns:
+			# Returns new Table object with applied aggregation function to all the columnss
 			def inner(*args, **kwargs):
 				rows = []
 				for col in self.columns:
-					val = self[col].apply(attr, *args, **kwargs) 
+					val = self[col].calc(attr, *args, **kwargs) 
 					rows.append([ col, val ])
 				title = '{}.{}()'.format(self.title, attr)
 				return Table(['Column', attr], rows, title)
 			return inner
 		elif attr in applyfuns:
-			def inner(separate=False, *args, **kwargs):
+			# Returns new Table object with applied function to all the values
+			def inner(*args, **kwargs):
 				title = '{}.{}()'.format(self.title, attr)
-				if separate:
-					columns = [self[col].apply(attr, separate=True, *args, **kwargs) for col in self.columns]
-					return Table.from_columns(columns, title=title)
-				else:
-					for col in self.columns:
-						self[col].apply(attr, *args, **kwargs) 
-					self.title = title
-					return self
+				# if separate:
+				columns = [self[col].apply(attr, separate=True, *args, **kwargs) for col in self.columns]
+				return Table.from_columns(columns, title=title)
+				# else:
+				# 	for col in self.columns:
+				# 		self[col].apply(attr, *args, **kwargs) 
+				# 	self.title = title
+				# 	return self
+			return inner
+		elif attr in typefuns:
+			# Changes types of all the table values
+			def inner(*args, **kwargs):
+				for col in self.columns:
+					self[col].apply(attr)
 			return inner
 		else:
-			raise ValueError('Applied function named "{}" does not exist!'.format(attr))
+			raise AttributeError('Applied function named "{}" does not exist!'.format(attr))
 
 	def folds(self, fold_count, start=0):
 		# Note that rows of created Table objects are

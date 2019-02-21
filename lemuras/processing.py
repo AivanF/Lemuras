@@ -38,6 +38,7 @@ median = Q2
 
 
 def avg(lst):
+	# TODO: use call_with_numbers_only ?
 	if len(lst) > 0:
 		return 1.0 * sum(lst) / len(lst)
 	else:
@@ -111,11 +112,11 @@ def tryDatetime(x, default=None):
 		return x
 	try:
 		return datetime.strptime(x[:19], '%Y-%m-%d %H:%M:%S')
-	except:
+	except ValueError:
 		pass
 	try:
 		return datetime.strptime(x[:16], '%Y-%m-%d %H:%M')
-	except:
+	except ValueError:
 		pass
 	return default
 
@@ -124,22 +125,35 @@ def tryDate(x, default=None):
 	if isinstance(x, date):
 		return x
 	try:
-		return datetime.strptime(x[:10], '%Y-%m-%d').date()
-	except:
-		pass
-	try:
-		return datetime.strptime(x[:10], '%m/%d/%Y').date()
-	except:
-		pass
-	try:
-		return datetime.strptime(x[:10], '%d.%m.%Y').date()
-	except:
+		if len(txt) > 8:
+			txt = txt[:10]
+			if '/' in txt:
+				return datetime.strptime(txt, '%d/%m/%Y').date()
+			elif '-' in txt:
+				return datetime.strptime(txt, '%Y-%m-%d').date()
+			elif '.' in txt:
+				return datetime.strptime(txt, '%d.%m.%Y').date()
+		elif len(txt) > 6:
+			txt = txt[:8]
+			if '/' in txt:
+				return datetime.strptime(txt, '%m/%d/%y').date()
+	except ValueError:
 		pass
 	return default
 
 
 def none_to(x, default=0):
 	return default if x is None else x
+
+
+typefuns = {
+	'str': makeStr,
+	'int': tryInt,
+	'float': tryFloat,
+	'date': tryDate,
+	'datetime': tryDatetime,
+	'none_to': none_to,
+}
 
 
 def isnull(x):
@@ -157,13 +171,6 @@ def isin(x, other):
 
 
 applyfuns = {
-	'str': makeStr,
-	'int': tryInt,
-	'float': tryFloat,
-	'date': tryDate,
-	'datetime': tryDatetime,
-	'none_to': none_to,
-
 	'isnull': isnull,
 	'lengths': lengths,
 	'isin': isin,
