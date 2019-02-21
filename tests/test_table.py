@@ -19,7 +19,13 @@ class TestLemurasTable(unittest.TestCase):
 	def test_basic(self):
 		self.assertEqual(df1.colcnt, len(cols))
 		self.assertEqual(df1.rowcnt, len(rows))
-		self.assertEqual(len(df1), len(cols)*len(rows))
+		self.assertEqual(len(df1), len(rows))
+		self.assertEqual(df1.count, len(cols)*len(rows))
+
+		# Nonexistent names must lead to specific error
+		# It is important due to __getattr__ overriding
+		with self.assertRaises(AttributeError) as context:
+			x = df1['size'].random_name
 
 	def test_loc_linked(self):
 		df2 = df1.copy()
@@ -51,6 +57,9 @@ class TestLemurasTable(unittest.TestCase):
 			part = df1.loc(ch)
 			print(part)
 		self.assertTrue('Column' in str(context.exception))
+
+	def test_apply(self):
+		self.assertEqual(df1.isnull().sum()['sum'].sum(), 1)
 
 	def test_calc(self):
 		res = df1.calc(lambda row: row['size']*row['weight'])
@@ -132,6 +141,19 @@ class TestLemurasTable(unittest.TestCase):
 		with self.assertRaises(ValueError) as context:
 			df1.find({'fake':5})
 		self.assertTrue('name' in str(context.exception))
+
+	def test_folds(self):
+		folds = df1.folds(3)
+		agg_sum1 = 0
+		agg_sum2 = 0
+		agg_cnt = 0
+		for cur in folds:
+			agg_sum1 += cur['size'].sum()
+			agg_sum2 += cur['weight'].sum()
+			agg_cnt += cur.rowcnt
+		self.assertEqual(agg_sum1, df1['size'].sum())
+		self.assertEqual(agg_sum2, df1['weight'].sum())
+		self.assertEqual(agg_cnt, df1.rowcnt)
 
 	def test_row(self):
 		df2 = df1.copy()

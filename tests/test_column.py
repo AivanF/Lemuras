@@ -18,6 +18,33 @@ cdates = Column(['2018-12-30', '14.09.1983', '02/15/1916'], 'Dates')
 
 
 class TestLemurasColumns(unittest.TestCase):
+	def test_basic(self):
+		# Only either values or table (with source_name) must be set
+		with self.assertRaises(ValueError) as context:
+			x = Column()
+		with self.assertRaises(ValueError) as context:
+			x = Column(values=[], table=df1, source_name='size')
+		with self.assertRaises(ValueError) as context:
+			x = Column(table=df1)
+
+		# Setting value
+		df2 = df1.copy()
+		df2['type'][1] = 'C'
+		self.assertEqual(df2['type'].nunique(), df1['type'].nunique() + 1)
+
+		# Nonexistent names must lead to specific error
+		# It is important due to __getattr__ overriding
+		with self.assertRaises(AttributeError) as context:
+			x = df2['size'].random_name
+
+		with self.assertRaises(ValueError) as context:
+			x = df2['size'].apply('random_name')
+		self.assertTrue('does not exist' in str(context.exception))
+
+		with self.assertRaises(ValueError) as context:
+			x = df2['size'].calc('random_name')
+		self.assertTrue('does not exist' in str(context.exception))
+
 	def test_compare(self):
 		self.assertEqual((df1['weight'] == 12).sum(), 3)
 		self.assertEqual((df1['weight'] < 12).sum(), 2)
@@ -25,7 +52,7 @@ class TestLemurasColumns(unittest.TestCase):
 		self.assertEqual((df1['weight'] > df1['size']).sum(), 6)
 
 	def test_operators(self):
-		# Simple operations
+		# Simple math operations
 		self.assertEqual((df1['weight']-df1['size']).sum(), 50)
 		self.assertEqual((df1['weight']+df1['size']).sum(), 90)
 		self.assertEqual((df1['weight']*df1['size']).sum(), 238)
@@ -34,6 +61,13 @@ class TestLemurasColumns(unittest.TestCase):
 		# Logical operations & comparison
 		self.assertEqual(((df1['weight'] < 12)|(df1['weight'] > 12)).sum(), 3)
 		self.assertEqual(((df1['weight'] <= 12)&(df1['weight'] == 12)).sum(), (df1['weight'] == 12).sum())
+		self.assertEqual((~(df1['weight'] <= 12)).sum(), 1)
+		# Different lengths
+		with self.assertRaises(ValueError) as context:
+			x = df1['weight'] + [1, 3, 2]
+		# Contains operator
+		self.assertFalse(123 in df1['size'])
+		self.assertTrue(4 in df1['size'])
 
 	def test_agg(self):
 		self.assertEqual(df1['weight'].avg(), 11.666666666666666)
@@ -61,6 +95,16 @@ class TestLemurasColumns(unittest.TestCase):
 		self.assertEqual(df1['tel'].copy().lengths(strings_only=False).sum(), 39)
 		self.assertEqual(df1['size'].copy().isin([1, 3]).sum(), 2)
 		self.assertEqual(cdates.date().istype(date), 3)
+
+	def test_folds(self):
+		folds = df1['weight'].folds(3)
+		agg_sum = 0
+		agg_cnt = 0
+		for cur in folds:
+			agg_sum += cur.sum()
+			agg_cnt += cur.rowcnt
+		self.assertEqual(agg_sum, df1['weight'].sum())
+		self.assertEqual(agg_cnt, df1.rowcnt)
 
 	def test_table(self):
 		df2 = df1.copy()
