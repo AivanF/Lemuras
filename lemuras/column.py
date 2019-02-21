@@ -241,8 +241,14 @@ class Column(object):
 	def __mod__(self, other):
 		return self.__operator2__(other, operator.__mod__)
 
+	def __floordiv__(self, other):
+		return self.__operator2__(other, operator.__floordiv__)
+
 	def __truediv__(self, other):
 		return self.__operator2__(other, operator.__truediv__)
+
+	def __div__(self, other):
+		return self.__operator2__(other, operator.__div__)
 
 	def __concat__(self, other):
 		return self.__operator2__(other, operator.__concat__)
