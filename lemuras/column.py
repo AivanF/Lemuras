@@ -217,61 +217,74 @@ class Column(object):
 	def __contains__(self, item):
 		return item in self.get_values()
 
-	def __operator__(self, other, operator):
+	def __operator1__(self, operator):
+		return Column([operator(self.get_value(i)) for i in range(la)])
+
+	def __operator2__(self, other, operator):
 		if isinstance(other, Column):
-			la = len(self)
-			lb = len(other)
-			if lb == la:
-				res = []
-				for i in range(la):
-					res.append(operator(self.get_value(i), other[i]))
-				return Column(res)
+			if len(self) == len(other):
+				return Column([operator(self.get_value(i), other[i]) for i in range(len(self))])
 			else:
 				raise ValueError('Others Column len must be the same')
 		else:
-			res = []
-			for el in self.get_values():
-				res.append(operator(el, other))
-			return Column(res)
+			return Column([operator(el, other) for el in self.get_values()])
+
+	def __not__(self):
+		return self.__operator1__(other, operator.__not__)
+
+	def __invert__(self):
+		return self.__operator1__(other, operator.__invert__)
+
+	def __abs__(self):
+		return self.__operator1__(other, operator.__abs__)
 
 	def __and__(self, other):
-		return self.__operator__(other, operator.__and__)
+		return self.__operator2__(other, operator.__and__)
 
 	def __or__(self, other):
-		return self.__operator__(other, operator.__or__)
+		return self.__operator2__(other, operator.__or__)
+
+	def __xor__(self, other):
+		return self.__operator2__(other, operator.__xor__)
 
 	def __add__(self, other):
-		return self.__operator__(other, operator.__add__)
+		return self.__operator2__(other, operator.__add__)
 
 	def __sub__(self, other):
-		return self.__operator__(other, operator.__sub__)
+		return self.__operator2__(other, operator.__sub__)
 
 	def __mul__(self, other):
-		return self.__operator__(other, operator.__mul__)
+		return self.__operator2__(other, operator.__mul__)
+
+	def __pow__(self, other):
+		return self.__operator2__(other, operator.__pow__)
 
 	def __mod__(self, other):
-		return self.__operator__(other, operator.__mod__)
+		return self.__operator2__(other, operator.__mod__)
 
 	def __truediv__(self, other):
-		return self.__operator__(other, operator.__truediv__)
+		return self.__operator2__(other, operator.__truediv__)
 
-	def __div__(self, other):
-		return self.__operator__(other, operator.__div__)
+	def __concat__(self, other):
+		return self.__operator2__(other, operator.__concat__)
+
+	def __and__(self, other):
+		return self.__operator2__(other, operator.__and__)
 
 	def __gt__(self, other):
-		return self.__operator__(other, operator.__gt__)
+		return self.__operator2__(other, operator.__gt__)
 
 	def __lt__(self, other):
-		return self.__operator__(other, operator.__lt__)
+		return self.__operator2__(other, operator.__lt__)
 
 	def __ge__(self, other):
-		return self.__operator__(other, operator.__ge__)
+		return self.__operator2__(other, operator.__ge__)
 
 	def __le__(self, other):
-		return self.__operator__(other, operator.__le__)
+		return self.__operator2__(other, operator.__le__)
 
 	def __eq__(self, other):
-		return self.__operator__(other, operator.__eq__)
+		return self.__operator2__(other, operator.__eq__)
 
 	def __ne__(self, other):
-		return self.__operator__(other, operator.__ne__)
+		return self.__operator2__(other, operator.__ne__)
