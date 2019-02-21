@@ -2,6 +2,7 @@ __author__ = 'AivanF'
 __copyright__ = 'Copyright 2018, AivanF'
 __contact__ = 'projects@aivanf.com'
 
+import datetime
 import numbers
 import sys
 
@@ -67,3 +68,47 @@ def list_of_lists(cnt):
 
 def iscollection(x):
 	return isinstance(x, list) or isinstance(x, tuple) or isinstance(x, set)
+
+
+def repr_cell(x, quote_strings=False):
+	if isinstance(x, datetime.date):
+		return str(x)
+	if not quote_strings and isinstance(x, main_str):
+		return x
+	return repr(x)
+
+
+def get_type(data, limit=0):
+	"""Returns data type and max symbols length."""
+	# None Int Float String Mixed
+	tp = 'n'
+	# varchar length
+	ln = 0
+
+	for index, el in enumerate(data):
+		if limit > 0 and index > limit:
+			break
+		ln = max(ln, len(str(el)))
+
+		if isinstance(el, int):
+			kind = 'i'
+		elif isinstance(el, float):
+			kind = 'f'
+		elif isinstance(el, datetime.datetime):
+			kind = 't'
+		elif isinstance(el, datetime.date):
+			kind = 'd'
+		else:
+			kind = 's'
+
+		if tp == 'n':
+			tp = kind
+		elif tp != kind:
+			if tp == 'f' and kind == 'i':
+				pass
+			elif tp == 'i' and kind == 'f':
+				tp = 'f'
+			else:
+				tp = 'm'
+
+	return tp, ln

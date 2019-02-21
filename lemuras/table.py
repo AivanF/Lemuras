@@ -14,73 +14,13 @@ __license__ = """License:
  appropriate credit, provide a link to the original file, and indicate if changes were made.
  This notice may not be removed or altered from any source distribution."""
 
-import datetime
 import re
 import csv
 import json
-from .utils import main_str, file_container, BeautifulSoup, iscollection, jsonable, lalepo
+from .utils import main_str, file_container, BeautifulSoup, iscollection, jsonable, lalepo, repr_cell
 from .processing import parse_value, parse_row, aggfuns, typefuns, applyfuns
 from .column import Column
-
-
-def repr_cell(x, quote_strings=False):
-	if isinstance(x, datetime.date):
-		return str(x)
-	if not quote_strings and isinstance(x, main_str):
-		return x
-	return repr(x)
-
-
-class Row(object):
-	def __init__(self, table, row_index):
-		self.table = table
-		self.row_index = row_index
-		self.idx = 0
-
-	def __iter__(self):
-		return self
-
-	def __next__(self):
-		self.idx += 1
-		try:
-			return self[self.idx-1]
-		except IndexError:
-			self.idx = 0
-			raise StopIteration
-	
-	# Python 2.x compatibility
-	next = __next__
-
-	@property
-	def colcnt(self):
-		return self.table.colcnt
-
-	@property
-	def columns(self):
-		return self.table.columns
-
-	def __getitem__(self, column):
-		return self.table.cell(column, self.row_index)
-
-	def __setitem__(self, column, value):
-		self.table.set_cell(column, self.row_index, value)
-
-	def _repr_html_(self):
-		values = map(lambda x: repr_cell(x, quote_strings=True), self.table.rows[self.row_index])
-		res = '<b>Row</b> {} of table <b>{}</b><br>\n[{}]'.format(self.row_index, self.table.title, ','.join(values))
-		res += self.html()
-		return res
-
-	def __len__(self):
-		"""Returns number of columns."""
-		return self.table.colcnt
-
-	def __str__(self):
-		values = map(lambda x: repr_cell(x, quote_strings=True), self.table.rows[self.row_index])
-		return '- Row {} of table "{}"\n[{}]'.format(self.row_index, self.table.title, ','.join(values))
-
-	def __repr__(self):
-		return self.__str__()
+from .row import Row
 
 
 class Table(object):
@@ -135,8 +75,10 @@ class Table(object):
 		"""Returns new Column object. Argument must be a column name or index.
 		This allocates new memory for each cell, you should not use it twice for the same column."""
 
-		if isinstance(column, str):
+		if column in self.column_indices:
 			column = self.column_indices[column]
+		elif not isinstance(column, int):
+			raise KeyError('Bad column key "{}"'.format(column))
 		# Deep copy:
 		# return Column([row[column] for row in self.rows], self.columns[column])
 		# Proxy object:
@@ -380,7 +322,7 @@ class Table(object):
 			res.add(row)
 		return res
 
-	def pivot(self, newcol, newrow, newval, empty=None):
+	def pivot(self, newcol, newrow, newval, empty=None, str_columns=True):
 		"""Returns new pivot Table based on current one.
 		Newcol is a name of column that will be used for columns.
 		Newrow is a name of column that will be used for rows.
@@ -398,6 +340,8 @@ class Table(object):
 		# Fill the dictionary
 		for row in self.rows:
 			curcol = row[indcol]
+			if str_columns:
+				curcol = str(curcol)
 			currow = row[indrow]
 			curval = row[indval]
 			if not curcol in colsels:
@@ -528,9 +472,42 @@ class Table(object):
 		title = 'Merged {} {} & {}'.format(how, tl.title, tr.title)
 		return Table(rescol, resrow, title)
 
+	def _check_query(self, query):
+		if not isinstance(query, dict):
+			raise ValueError('Query must be a dictionary!')
+		if len(query) < 1:
+			raise ValueError('Query must have at least one key!')
+		for key in query:
+			if key not in self.column_indices:
+				raise ValueError('Some query key is not a column name!')
+
+	def find(self, query):
+		"""Returns first row object that satisfies given query.
+		Returns None if no row matched.
+		"""
+		self._check_query(query)
+		for i in range(self.rowcnt):
+			well = True
+			for key in query:
+				if self.cell(key, i) != query[key]:
+					well = False
+					break
+			if well:
+				return self.row(i)
+		return None
+
+	def find_all(self, query):
+		"""Returns new Table with all the rows that match given query.
+		"""
+		self._check_query(query)
+		checker = Column.make(self.rowcnt, True)
+		for key in query:
+			checker = checker & (self[key] == query[key])
+		return self.loc(checker)
+
 	def __getattr__(self, attr):
 		if attr in aggfuns:
-			# Returns new Table object with applied aggregation function to all the columnss
+			# Returns new Table object with applied aggregation function to all the columns
 			def inner(*args, **kwargs):
 				rows = []
 				for col in self.columns:
@@ -543,14 +520,8 @@ class Table(object):
 			# Returns new Table object with applied function to all the values
 			def inner(*args, **kwargs):
 				title = '{}.{}()'.format(self.title, attr)
-				# if separate:
 				columns = [self[col].apply(attr, separate=True, *args, **kwargs) for col in self.columns]
 				return Table.from_columns(columns, title=title)
-				# else:
-				# 	for col in self.columns:
-				# 		self[col].apply(attr, *args, **kwargs) 
-				# 	self.title = title
-				# 	return self
 			return inner
 		elif attr in typefuns:
 			# Changes types of all the table values
@@ -560,6 +531,13 @@ class Table(object):
 			return inner
 		else:
 			raise AttributeError('Applied function named "{}" does not exist!'.format(attr))
+
+	def __len__(self):
+		return self.rowcnt * self.colcnt
+
+	def count(self):
+		"""Returns number of cells - product of number of rows and columns."""
+		return self.rowcnt * self.colcnt
 
 	def folds(self, fold_count, start=0):
 		# Note that rows of created Table objects are
@@ -839,18 +817,6 @@ class Table(object):
 			hiddencols = False
 		return showrowscnt, showcolscnt, hiddenrows, hiddencols
 
-	def __str__(self):
-		showrowscnt, showcolscnt, hiddenrows, hiddencols = self.__need_cut__()
-		res = '- Table object, title: "{}", {} columns, {} rows.\n'.format(self.title, len(self.columns), len(self.rows))
-		res += ' '.join(map(lambda x: repr_cell(x, quote_strings=True), self.columns[:showcolscnt]))
-		if hiddencols:
-			res += ' ...'
-		for row in self.rows[:showrowscnt]:
-			res += '\n' + ' '.join(map(lambda x: repr_cell(x, quote_strings=True), row[:showcolscnt]))
-		if hiddenrows:
-			res += '\n. . .'
-		return res
-
 	def html(self, cut=True):
 		showrowscnt, showcolscnt, hiddenrows, hiddencols = self.__need_cut__(cut)
 		res = '<table>\n<tr><th>'
@@ -881,6 +847,14 @@ class Table(object):
 	def __repr__(self):
 		return self.__str__()
 
-	def __len__(self):
-		"""Returns number of cells - product of number of rows and columns."""
-		return self.rowcnt * self.colcnt
+	def __str__(self):
+		showrowscnt, showcolscnt, hiddenrows, hiddencols = self.__need_cut__()
+		res = '- Table object, title: "{}", {} columns, {} rows.\n'.format(self.title, len(self.columns), len(self.rows))
+		res += ' '.join(map(lambda x: repr_cell(x, quote_strings=True), self.columns[:showcolscnt]))
+		if hiddencols:
+			res += ' ...'
+		for row in self.rows[:showrowscnt]:
+			res += '\n' + ' '.join(map(lambda x: repr_cell(x, quote_strings=True), row[:showcolscnt]))
+		if hiddenrows:
+			res += '\n. . .'
+		return res

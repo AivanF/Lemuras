@@ -15,12 +15,14 @@ __license__ = """License:
  This notice may not be removed or altered from any source distribution."""
 
 import operator
-from datetime import date, datetime
+from .utils import repr_cell, get_type
 from .processing import applyfuns, typefuns, aggfuns
 
 
 class Column(object):
-	def __init__(self, values=None, title='NoName', table=None, source_name=None):
+	def __init__(self, values=None, title=None, table=None, source_name=None):
+		if title is None:
+			title = 'NoName'
 		if values is None and table is None:
 			raise ValueError('Either values or table must be not None!')
 		if values is not None and table is not None:
@@ -62,46 +64,18 @@ class Column(object):
 	def __iter__(self):
 		return iter(self.get_values())
 
+	@classmethod
+	def make(cls, length, value=0, title=None):
+		return cls([value]*length, title)
+
 	def get_type(self):
 		"""Returns column type and max symbols length."""
-		# None Int Float String Mixed
-		tp = 'n'
-		# varchar length
-		ln = 0
-
-		cnt = len(self)
-		if cnt > 4096:
-			cnt = int(cnt / 3)
-		elif cnt > 2048:
-			cnt = int(cnt / 2)
-
-		for index, el in enumerate(self.get_values()):
-			if index >= cnt:
-				break
-			ln = max(ln, len(str(el)))
-
-			if isinstance(el, int):
-				kind = 'i'
-			elif isinstance(el, float):
-				kind = 'f'
-			elif isinstance(el, datetime):
-				kind = 't'
-			elif isinstance(el, date):
-				kind = 'd'
-			else:
-				kind = 's'
-
-			if tp == 'n':
-				tp = kind
-			elif tp != kind:
-				if tp == 'f' and kind == 'i':
-					pass
-				elif tp == 'i' and kind == 'f':
-					tp = 'f'
-				else:
-					tp = 'm'
-
-		return tp, ln
+		limit = len(self)
+		if limit > 4096:
+			limit = int(limit / 3)
+		elif limit > 2048:
+			limit = int(limit / 2)
+		return get_type(self.get_values(), limit)
 
 	def folds(self, fold_count, start=0):
 		# Note that the method can return even the original Column itself.
@@ -192,21 +166,26 @@ class Column(object):
 		if n > 12:
 			n = 10
 			ns = True
-		res = '<b>Column</b> object, title: "{}" values: {}.'.format(self.title, list(self.get_values())[:n])
+		values = map(lambda x: repr_cell(x, quote_strings=True), list(self.get_values())[:n])
+		res = '<b>Column</b> "{}" values: {}.'.format(self.title, ','.join(values))
 		if ns:
 			res += ' . .'
 		return res
 
-	def __repr__(self):
+	def __str__(self):
 		n = len(self)
 		ns = False
 		if n > 12:
 			n = 10
 			ns = True
-		res = '- Column object, title: "{}" values: {}.'.format(self.title, list(self.get_values())[:n])
+		values = map(lambda x: repr_cell(x, quote_strings=True), list(self.get_values())[:n])
+		res = '- Column "{}"\n{}'.format(self.title, ','.join(values))
 		if ns:
 			res += ' . .'
 		return res
+
+	def __repr__(self):
+		return self.__str__()
 
 	def __len__(self):
 		if self.values is not None:
