@@ -34,16 +34,19 @@ There are 2 simple options:
 
 All the features are described in notebook examples:
 
-1. [Basic things](https://github.com/AivanF/Lemuras/blob/master/examples/Example%201%20-%20Basic%20things.ipynb) – access to columns, cells, rows; add, delete, change their values; also filtering and sorting.
-1. [Group by](https://github.com/AivanF/Lemuras/blob/master/examples/Example%202%20-%20Group%20By.ipynb) – grouping and combining (aggregating).
-1. [Merge / Join](https://github.com/AivanF/Lemuras/blob/master/examples/Example%203%20-%20Merge%20Join.ipynb) – such types: inner, outer, left, right.
-1. [Pivot table](https://github.com/AivanF/Lemuras/blob/master/examples/Example%204%20-%20Pivot%20table.ipynb) – create new tables with columns, rows and cells from another table.
-1. [Tables Concatenate / Append](https://github.com/AivanF/Lemuras/blob/master/examples/Example%205%20-%20Tables%20Concatenate%20Append.ipynb) – simple tables concatenation and appending.
-1. [Types, Read/Write, CSV, SQL, JSON, HTML](https://github.com/AivanF/Lemuras/blob/master/examples/Example%206%20-%20Types%20Read%20Write%20CSV%20SQL%20JSON%20HTML.ipynb) – description of Lemuras supported data types, saving to and loading from CSV, SQL, JSON, HTML formats.
+1) [Basic things](https://github.com/AivanF/Lemuras/blob/master/examples/Example%201%20-%20Basic%20things.ipynb) – access to columns, cells, rows; add, delete, change their values; also filtering and sorting.
+1.5) [Functions applying](https://github.com/AivanF/Lemuras/blob/master/examples/Example%201.5%20-%20Functions%20Applying.ipynb) – apply functions or lambda expressions to columns or tables, change types, aggregate values, use your own or one of lots predefined useful functions (oncluding statistical ones).
+2) [Group by](https://github.com/AivanF/Lemuras/blob/master/examples/Example%202%20-%20Group%20By.ipynb) – grouping and combining (aggregating).
+3) [Merge / Join](https://github.com/AivanF/Lemuras/blob/master/examples/Example%203%20-%20Merge%20Join.ipynb) – such types: inner, outer, left, right.
+4) [Pivot table](https://github.com/AivanF/Lemuras/blob/master/examples/Example%204%20-%20Pivot%20table.ipynb) – create new tables with columns, rows and cells from another table.
+5) [Tables Concatenate / Append](https://github.com/AivanF/Lemuras/blob/master/examples/Example%205%20-%20Tables%20Concatenate%20Append.ipynb) – simple tables concatenation and appending.
+6) [Types, Read/Write, CSV, SQL, JSON, HTML](https://github.com/AivanF/Lemuras/blob/master/examples/Example%206%20-%20Types%20Read%20Write%20CSV%20SQL%20JSON%20HTML.ipynb) – description of Lemuras supported data types, saving to and loading from CSV, SQL, JSON, HTML formats.
 
-In addition, there is one complex example of solving a real-life problem:
+In addition, there are complex examples of solving a real world problems:
 
 - [Retargeting results report](https://github.com/AivanF/Lemuras/blob/master/examples/Complex%20Example%20-%20Retargeting%20results%20report.ipynb)
+
+- [Filtration by location area](https://github.com/AivanF/Lemuras/blob/master/examples/Complex%20Example%202%20-%20Filtering%20by%20Location%20Area.ipynb)
 
 The code of Lemuras is well-commented, also there are many unit-tests, so, you can easily find useful information there. Contributions are welcome.
 
