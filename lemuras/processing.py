@@ -84,66 +84,66 @@ aggfuns = {
 }
 
 
-def makeStr(x, default=None):
-	if isinstance(x, str):
-		return x
+def makeStr(val, default=None):
+	if isinstance(val, str):
+		return val
 	elif default is None:
-		return str(x)
+		return str(val)
 	else:
 		return default
 
 
-def tryInt(x, default=0):
+def tryInt(val, default=0):
 	try:
-		return int(x)
+		return int(val)
 	except:
 		return default
 
 
-def tryFloat(x, default=0):
+def tryFloat(val, default=0):
 	try:
-		return float(x)
+		return float(val)
 	except:
 		return default
 
 
-def tryDatetime(x, default=None):
-	if isinstance(x, datetime):
-		return x
+def tryDatetime(val, default=None):
+	if isinstance(val, datetime):
+		return val
 	try:
-		return datetime.strptime(x[:19], '%Y-%m-%d %H:%M:%S')
+		return datetime.strptime(val[:19], '%Y-%m-%d %H:%M:%S')
 	except ValueError:
 		pass
 	try:
-		return datetime.strptime(x[:16], '%Y-%m-%d %H:%M')
+		return datetime.strptime(val[:16], '%Y-%m-%d %H:%M')
 	except ValueError:
 		pass
 	return default
 
 
-def tryDate(x, default=None):
-	if isinstance(x, date):
-		return x
+def tryDate(val, default=None):
+	if isinstance(val, date):
+		return val
 	try:
-		if len(txt) > 8:
-			txt = txt[:10]
-			if '/' in txt:
-				return datetime.strptime(txt, '%d/%m/%Y').date()
-			elif '-' in txt:
-				return datetime.strptime(txt, '%Y-%m-%d').date()
-			elif '.' in txt:
-				return datetime.strptime(txt, '%d.%m.%Y').date()
-		elif len(txt) > 6:
-			txt = txt[:8]
-			if '/' in txt:
-				return datetime.strptime(txt, '%m/%d/%y').date()
+		if len(val) > 8:
+			val = val[:10]
+			if '/' in val:
+				return datetime.strptime(val, '%d/%m/%Y').date()
+			elif '-' in val:
+				return datetime.strptime(val, '%Y-%m-%d').date()
+			elif '.' in val:
+				return datetime.strptime(val, '%d.%m.%Y').date()
+		elif len(val) > 6:
+			val = val[:8]
+			if '/' in val:
+				return datetime.strptime(val, '%m/%d/%y').date()
 	except ValueError:
 		pass
 	return default
 
 
-def none_to(x, default=0):
-	return default if x is None else x
+def none_to(val, default=0):
+	return default if val is None else val
 
 
 typefuns = {
@@ -156,18 +156,18 @@ typefuns = {
 }
 
 
-def isnull(x):
-	return x is None
+def isnull(val):
+	return val is None
 
 
-def lengths(x, strings_only=False):
-	if strings_only and not isinstance(x, str):
+def lengths(val, strings_only=False):
+	if strings_only and not isinstance(val, str):
 		return None
-	return len(str(x))
+	return len(str(val))
 
 
-def isin(x, other):
-	return x in other
+def isin(val, other):
+	return val in other
 
 
 applyfuns = {
@@ -180,23 +180,23 @@ applyfuns = {
 
 
 def parse_value(val, empty=None):
-	v = tryInt(val, None)
-	if v is not None:
-		return v
+	res = tryInt(val, None)
+	if res is not None:
+		return res
 	else:
-		v = tryFloat(val, None)
-		if v is not None:
-			return v
+		res = tryFloat(val, None)
+		if res is not None:
+			return res
 		else:
-			v = tryDatetime(val, None)
-			if v is not None:
-				return v
+			res = tryDatetime(val, None)
+			if res is not None:
+				return res
 			else:
-				v = tryDate(val, None)
-				if v is not None:
-					return v
-	v = str(val).lower()
-	if v == 'none' or v == 'null' or len(v) == 0:
+				res = tryDate(val, None)
+				if res is not None:
+					return res
+	res = str(val).lower()
+	if res == 'none' or res == 'null' or len(res) == 0:
 		return empty
 	return val
 
