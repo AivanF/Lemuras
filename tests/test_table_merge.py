@@ -23,9 +23,9 @@ rows = [
 df2 = Table(cols, rows)
 
 
-class TestLemurasMerge(unittest.TestCase):
+class TestLemurasTableMerge(unittest.TestCase):
 	def __init__(self, *args, **kwargs):
-		super(TestLemurasMerge, self).__init__(*args, **kwargs)
+		super(TestLemurasTableMerge, self).__init__(*args, **kwargs)
 		self.df3 = Table.merge(df1, df2, ['type', 'size'], 'outer')
 
 	def test_columns(self):

@@ -14,9 +14,9 @@ rows = [
 agg_rule = { 'size': { 'Count': len, 'Value': lambda x: sum(x)*3, 'Any': 'last' } }
 
 
-class TestLemurasGroupby(unittest.TestCase):
+class TestLemurasTableGroupby(unittest.TestCase):
 	def __init__(self, *args, **kwargs):
-		super(TestLemurasGroupby, self).__init__(*args, **kwargs)
+		super(TestLemurasTableGroupby, self).__init__(*args, **kwargs)
 		self.df1 = Table(cols, rows)
 		self.gr = self.df1.groupby(['type', 'weight'])
 

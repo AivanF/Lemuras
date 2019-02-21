@@ -18,7 +18,7 @@ rows = [
 df2 = Table(cols, rows, 'Second')
 
 
-class TestLemurasConcat(unittest.TestCase):
+class TestLemurasTableConcat(unittest.TestCase):
 	def test_concat(self):
 		df3 = Table.concat([df1, df2])
 		self.assertEqual(df1.columns, df3.columns)
