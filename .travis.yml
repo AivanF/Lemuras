@@ -10,7 +10,7 @@ matrix:
     dist: xenial    # required for Python 3.7 (travis-ci/travis-ci#9069)
     sudo: required  # required for Python 3.7 (travis-ci/travis-ci#9069)
 before_install:
-  pip install --user codecov
+  pip install codecov
 install:
   - pip install beautifulsoup4
   - pip install lxml
