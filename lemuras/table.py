@@ -52,6 +52,10 @@ class Row(object):
 	next = __next__
 
 	@property
+	def colcnt(self):
+		return self.table.colcnt
+
+	@property
 	def columns(self):
 		return self.table.columns
 
@@ -59,10 +63,13 @@ class Row(object):
 		return self.table.cell(column, self.row_index)
 
 	def __setitem__(self, column, value):
-		if column in self.columns:
-			self.table.set_cell(column, self.row_index, value)
-		else:
-			self.table.set_cell(column, self.row_index, value)
+		self.table.set_cell(column, self.row_index, value)
+
+	def _repr_html_(self):
+		values = map(lambda x: repr_cell(x, quote_strings=True), self.table.rows[self.row_index])
+		res = '<b>Row</b> {} of table <b>{}</b><br>\n[{}]'.format(self.row_index, self.table.title, ','.join(values))
+		res += self.html()
+		return res
 
 	def __len__(self):
 		"""Returns number of columns."""
@@ -70,7 +77,7 @@ class Row(object):
 
 	def __str__(self):
 		values = map(lambda x: repr_cell(x, quote_strings=True), self.table.rows[self.row_index])
-		return '[{}]'.format(','.join(values))
+		return '- Row {} of table "{}"\n[{}]'.format(self.row_index, self.table.title, ','.join(values))
 
 	def __repr__(self):
 		return self.__str__()
@@ -95,7 +102,8 @@ class Table(object):
 	def __next__(self):
 		self.idx += 1
 		try:
-			return self.rows[self.idx-1]
+			# return self.rows[self.idx-1]
+			return self.row(self.idx-1)
 		except IndexError:
 			self.idx = 0
 			raise StopIteration
@@ -215,7 +223,10 @@ class Table(object):
 
 	def row(self, row_index=0):
 		"""Returns a Row object."""
-		return Row(self, row_index)
+		if isinstance(row_index, int) and row_index < self.rowcnt and row_index >= -self.rowcnt:
+			return Row(self, row_index)
+		else:
+			raise IndexError('Bad row index!')
 
 	def row_named(self, row_index=0):
 		"""Returns a dictionary with row values."""
@@ -863,7 +874,7 @@ class Table(object):
 		return res
 
 	def _repr_html_(self):
-		res = '<b>Table</b> object, title: <b>{}</b>, {} columns, {} rows.<br>\n'.format(self.title, len(self.columns), len(self.rows))
+		res = '<b>Table</b> object <b>{}</b>, {} columns, {} rows<br>\n'.format(self.title, len(self.columns), len(self.rows))
 		res += self.html()
 		return res
 
