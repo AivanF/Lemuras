@@ -15,8 +15,17 @@ __license__ = """License:
  This notice may not be removed or altered from any source distribution."""
 
 import operator
-from .utils import repr_cell, get_type
+from .utils import iscollection, repr_cell, get_type
 from .processing import applyfuns, typefuns, aggfuns
+
+
+def own_invert(value):
+	if value == True:
+		return False
+	elif value == False:
+		return True
+	else:
+		return operator.__invert__(value)
 
 
 class Column(object):
@@ -83,11 +92,12 @@ class Column(object):
 			return [self]
 		end = start
 		res = []
+		step = max(1, int(self.rowcnt/fold_count))
 		values = list(self.get_values())
 		for i in range(fold_count):
 			begin = end
 			if i < fold_count - 1:
-				end += int(len(values)/fold_count)
+				end += step
 				data = values[begin:end]
 				# print('[{}:{}]'.format(begin, end))
 			else:
@@ -193,14 +203,18 @@ class Column(object):
 		else:
 			return self.table.rowcnt
 
+	@property
+	def rowcnt(self):
+		return len(self)
+
 	def __contains__(self, item):
 		return item in self.get_values()
 
 	def __operator1__(self, operator):
-		return Column([operator(self.get_value(i)) for i in range(la)])
+		return Column([operator(self.get_value(i)) for i in range(self.rowcnt)])
 
 	def __operator2__(self, other, operator):
-		if isinstance(other, Column):
+		if isinstance(other, Column) or iscollection(other):
 			if len(self) == len(other):
 				return Column([operator(self.get_value(i), other[i]) for i in range(len(self))])
 			else:
@@ -208,14 +222,11 @@ class Column(object):
 		else:
 			return Column([operator(el, other) for el in self.get_values()])
 
-	def __not__(self):
-		return self.__operator1__(other, operator.__not__)
-
 	def __invert__(self):
-		return self.__operator1__(other, operator.__invert__)
+		return self.__operator1__(own_invert)
 
 	def __abs__(self):
-		return self.__operator1__(other, operator.__abs__)
+		return self.__operator1__(operator.__abs__)
 
 	def __and__(self, other):
 		return self.__operator2__(other, operator.__and__)

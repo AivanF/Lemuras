@@ -533,8 +533,9 @@ class Table(object):
 			raise AttributeError('Applied function named "{}" does not exist!'.format(attr))
 
 	def __len__(self):
-		return self.rowcnt * self.colcnt
+		return self.rowcnt
 
+	@property
 	def count(self):
 		"""Returns number of cells - product of number of rows and columns."""
 		return self.rowcnt * self.colcnt
@@ -542,15 +543,16 @@ class Table(object):
 	def folds(self, fold_count, start=0):
 		# Note that rows of created Table objects are
 		# the same objects as in the original Table.
-		# And the method can return even the original object itself.
+		# Also, the method can return even the original object itself.
 		if fold_count < 2:
 			return [self]
 		end = start
 		res = []
+		step = max(1, int(self.rowcnt/fold_count))
 		for i in range(fold_count):
 			begin = end
 			if i < fold_count - 1:
-				end += int(self.rowcnt/fold_count)
+				end += step
 				data = self.rows[begin:end]
 				# print('[{}:{}]'.format(begin, end))
 			else:
