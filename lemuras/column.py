@@ -14,6 +14,7 @@ __license__ = """License:
  appropriate credit, provide a link to the original file, and indicate if changes were made.
  This notice may not be removed or altered from any source distribution."""
 
+import operator
 from datetime import date, datetime
 from .processing import applyfuns, typefuns, aggfuns
 
@@ -216,240 +217,61 @@ class Column(object):
 	def __contains__(self, item):
 		return item in self.get_values()
 
-	def __and__(self, other):
+	def __operator__(self, other, operator):
 		if isinstance(other, Column):
 			la = len(self)
 			lb = len(other)
 			if lb == la:
 				res = []
 				for i in range(la):
-					res.append(self.get_value(i) and other[i])
+					res.append(operator(self.get_value(i), other[i]))
 				return Column(res)
 			else:
-				raise ValueError('Column.__and__ others Column len must be the same')
+				raise ValueError('Others Column len must be the same')
 		else:
 			res = []
 			for el in self.get_values():
-				res.append(el and other)
+				res.append(operator(el, other))
 			return Column(res)
+
+	def __and__(self, other):
+		return self.__operator__(other, operator.__and__)
 
 	def __or__(self, other):
-		if isinstance(other, Column):
-			la = len(self)
-			lb = len(other)
-			if lb == la:
-				res = []
-				for i in range(la):
-					res.append(self.get_value(i) or other[i])
-				return Column(res)
-			else:
-				raise ValueError('Column.__or__ others Column len must be the same')
-		else:
-			res = []
-			for el in self.get_values():
-				res.append(el or other)
-			return Column(res)
+		return self.__operator__(other, operator.__or__)
 
 	def __add__(self, other):
-		if isinstance(other, Column):
-			la = len(self)
-			lb = len(other)
-			if lb == la:
-				res = []
-				for i in range(la):
-					res.append(self.get_value(i) + other[i])
-				return Column(res)
-			else:
-				raise ValueError('Column.__add__ others Column len must be the same')
-		else:
-			res = []
-			for el in self.get_values():
-				res.append(el + other)
-			return Column(res)
+		return self.__operator__(other, operator.__add__)
 
 	def __sub__(self, other):
-		if isinstance(other, Column):
-			la = len(self)
-			lb = len(other)
-			if lb == la:
-				res = []
-				for i in range(la):
-					res.append(self.get_value(i) - other[i])
-				return Column(res)
-			else:
-				raise ValueError('Column.__sub__ others Column len must be the same')
-		else:
-			res = []
-			for el in self.get_values():
-				res.append(el - other)
-			return Column(res)
+		return self.__operator__(other, operator.__sub__)
 
 	def __mul__(self, other):
-		if isinstance(other, Column):
-			la = len(self)
-			lb = len(other)
-			if lb == la:
-				res = []
-				for i in range(la):
-					res.append(self.get_value(i) * other[i])
-				return Column(res)
-			else:
-				raise ValueError('Column.__mul__ others Column len must be the same')
-		else:
-			res = []
-			for el in self.get_values():
-				res.append(el * other)
-			return Column(res)
+		return self.__operator__(other, operator.__mul__)
 
 	def __mod__(self, other):
-		if isinstance(other, Column):
-			la = len(self)
-			lb = len(other)
-			if lb == la:
-				res = []
-				for i in range(la):
-					res.append(self.get_value(i) % other[i])
-				return Column(res)
-			else:
-				raise ValueError('Column.__mod__ others Column len must be the same')
-		else:
-			res = []
-			for el in self.get_values():
-				res.append(el % other)
-			return Column(res)
+		return self.__operator__(other, operator.__mod__)
 
 	def __truediv__(self, other):
-		if isinstance(other, Column):
-			la = len(self)
-			lb = len(other)
-			if lb == la:
-				res = []
-				for i in range(la):
-					res.append(self.get_value(i) / other[i])
-				return Column(res)
-			else:
-				raise ValueError('Column.__truediv__ others Column len must be the same')
-		else:
-			res = []
-			for el in self.get_values():
-				res.append(el / other)
-			return Column(res)
+		return self.__operator__(other, operator.__truediv__)
 
 	def __div__(self, other):
-		if isinstance(other, Column):
-			la = len(self)
-			lb = len(other)
-			if lb == la:
-				res = []
-				for i in range(la):
-					res.append(self.get_value(i) / other[i])
-				return Column(res)
-			else:
-				raise ValueError('Column.__div__ others Column len must be the same')
-		else:
-			res = []
-			for el in self.get_values():
-				res.append(el / other)
-			return Column(res)
+		return self.__operator__(other, operator.__div__)
 
 	def __gt__(self, other):
-		if isinstance(other, Column):
-			la = len(self)
-			lb = len(other)
-			if lb == la:
-				res = []
-				for i in range(la):
-					res.append(self.get_value(i) > other[i])
-				return Column(res)
-			else:
-				raise ValueError('Column.__gt__ others Column len must be the same')
-		else:
-			res = []
-			for el in self.get_values():
-				res.append(el > other)
-			return Column(res)
+		return self.__operator__(other, operator.__gt__)
 
 	def __lt__(self, other):
-		if isinstance(other, Column):
-			la = len(self)
-			lb = len(other)
-			if lb == la:
-				res = []
-				for i in range(la):
-					res.append(self.get_value(i) < other[i])
-				return Column(res)
-			else:
-				raise ValueError('Column.__lt__ others Column len must be the same')
-		else:
-			res = []
-			for el in self.get_values():
-				res.append(el < other)
-			return Column(res)
+		return self.__operator__(other, operator.__lt__)
 
 	def __ge__(self, other):
-		if isinstance(other, Column):
-			la = len(self)
-			lb = len(other)
-			if lb == la:
-				res = []
-				for i in range(la):
-					res.append(self.get_value(i) >= other[i])
-				return Column(res)
-			else:
-				raise ValueError('Column.__ge__ others Column len must be the same')
-		else:
-			res = []
-			for el in self.get_values():
-				res.append(el >= other)
-			return Column(res)
+		return self.__operator__(other, operator.__ge__)
 
 	def __le__(self, other):
-		if isinstance(other, Column):
-			la = len(self)
-			lb = len(other)
-			if lb == la:
-				res = []
-				for i in range(la):
-					res.append(self.get_value(i) <= other[i])
-				return Column(res)
-			else:
-				raise ValueError('Column.__le__ others Column len must be the same')
-		else:
-			res = []
-			for el in self.get_values():
-				res.append(el <= other)
-			return Column(res)
+		return self.__operator__(other, operator.__le__)
 
 	def __eq__(self, other):
-		if isinstance(other, Column):
-			la = len(self)
-			lb = len(other)
-			if lb == la:
-				res = []
-				for i in range(la):
-					res.append(self.get_value(i) == other[i])
-				return Column(res)
-			else:
-				raise ValueError('Column.__eq__ others Column len must be the same')
-		else:
-			res = []
-			for el in self.get_values():
-				res.append(el == other)
-			return Column(res)
+		return self.__operator__(other, operator.__eq__)
 
 	def __ne__(self, other):
-		if isinstance(other, Column):
-			la = len(self)
-			lb = len(other)
-			if lb == la:
-				res = []
-				for i in range(la):
-					res.append(self.get_value(i) != other[i])
-				return Column(res)
-			else:
-				raise ValueError('Column.__ne__ others Column len must be the same')
-		else:
-			res = []
-			for el in self.get_values():
-				res.append(el != other)
-			return Column(res)
+		return self.__operator__(other, operator.__ne__)
