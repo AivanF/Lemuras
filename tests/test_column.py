@@ -63,7 +63,8 @@ class TestLemurasColumns(unittest.TestCase):
 		self.assertEqual(cdates.date().istype(date), 3)
 
 	def test_table(self):
-		df2 = df1.int(separate=True)
+		df2 = df1.copy()
+		df2.int()
 		self.assertEqual(df2['type'].min(), 0)
 		self.assertEqual(df2['type'].max(), 0)
 		self.assertEqual(df1['type'].min(), 'A')

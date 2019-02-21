@@ -32,5 +32,5 @@ class TestLemurasMerge(unittest.TestCase):
 		self.assertEqual(self.df3.columns, ['type', 'size', 'weight', 'tel', 'cost'])
 
 	def test_values(self):
-		self.assertEqual(self.df3.nunique()[1].sum(), 22)
+		self.assertEqual(self.df3.nunique()[1].sum(), 23)
 		self.assertEqual(self.df3['weight'].sum(), 74)

@@ -110,6 +110,8 @@ def tryFloat(val, default=0):
 def tryDatetime(val, default=None):
 	if isinstance(val, datetime):
 		return val
+	if not isinstance(val, str):
+		return default
 	try:
 		return datetime.strptime(val[:19], '%Y-%m-%d %H:%M:%S')
 	except ValueError:
@@ -124,6 +126,8 @@ def tryDatetime(val, default=None):
 def tryDate(val, default=None):
 	if isinstance(val, date):
 		return val
+	if not isinstance(val, str):
+		return default
 	try:
 		if len(val) > 8:
 			val = val[:10]

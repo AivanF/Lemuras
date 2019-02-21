@@ -475,8 +475,8 @@ class Table(object):
 					# Add right side if not keys
 					# they are already in left side
 					for column_index in range(tr.colcnt):
-						if rightcol2key[k] is None:
-							row.append(rr[k])
+						if rightcol2key[column_index] is None:
+							row.append(rr[column_index])
 					resrow.append(row)
 
 		if doleft:
@@ -490,7 +490,7 @@ class Table(object):
 					# Fill right side with empty
 					for column_index in range(tr.colcnt):
 						# Key are already in the left side
-						if rightcol2key[k] is None:
+						if rightcol2key[column_index] is None:
 							# If not a key, just add the value
 							row.append(empty)
 					resrow.append(row)
@@ -506,12 +506,12 @@ class Table(object):
 					rr = tr.rows[row_index]
 					# Fill right side with values
 					for column_index in range(tr.colcnt):
-						if rightcol2key[k] is None:
+						if rightcol2key[column_index] is None:
 							# If not a key, just add the value
-							row.append(rr[k])
+							row.append(rr[column_index])
 						else:
 							# If a key, put it in the left side
-							row[rightcol2key[k]] = rr[k]
+							row[rightcol2key[column_index]] = rr[column_index]
 					resrow.append(row)
 
 		title = 'Merged {} {} & {}'.format(how, tl.title, tr.title)
