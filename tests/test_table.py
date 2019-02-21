@@ -16,6 +16,11 @@ shift = 4
 
 
 class TestLemurasTable(unittest.TestCase):
+	def test_basic(self):
+		self.assertEqual(df1.colcnt, len(cols))
+		self.assertEqual(df1.rowcnt, len(rows))
+		self.assertEqual(len(df1), len(cols)*len(rows))
+
 	def test_loc_linked(self):
 		df2 = df1.copy()
 		# Must be not separate
@@ -97,6 +102,37 @@ class TestLemurasTable(unittest.TestCase):
 			df2['size'] = 'test,sample data'
 		self.assertTrue('Column' in str(context.exception))
 
+	def test_from_columns(self):
+		columns = [
+			df1['type'],
+			df1['weight'] + df1['size']**2,
+		]
+		title = 'Random test title'
+		df2 = Table.from_columns(columns, title)
+		self.assertEqual(df2.rowcnt, df1.rowcnt)
+		self.assertEqual(df2.colcnt, len(columns))
+		self.assertEqual(df2.title, title)
+
+	def test_find(self):
+		self.assertEqual(df1.find({'type':'B', 'weight':12})['tel'], 84505505151)
+		self.assertEqual(df1.find({'type':'A', 'weight':7}), None)
+		
+		found = df1.find_all({'type':'A', 'weight':12})
+		self.assertEqual(found.colcnt, df1.colcnt)
+		self.assertEqual(found.rowcnt, 2)
+
+		with self.assertRaises(ValueError) as context:
+			df1.find(16)
+		self.assertTrue('dict' in str(context.exception))
+
+		with self.assertRaises(ValueError) as context:
+			df1.find({})
+		self.assertTrue('at least' in str(context.exception))
+
+		with self.assertRaises(ValueError) as context:
+			df1.find({'fake':5})
+		self.assertTrue('name' in str(context.exception))
+
 	def test_row(self):
 		df2 = df1.copy()
 
@@ -125,3 +161,10 @@ class TestLemurasTable(unittest.TestCase):
 		for row in df2:
 			for i, el in enumerate(row):
 				self.assertEqual(el, row[i])
+
+		self.assertTrue(isinstance(df1.row(0)._repr_html_(), str))
+		self.assertTrue(isinstance(df1.row(-1).__repr__(), str))
+
+	def test_repr(self):
+		self.assertTrue(isinstance(df1._repr_html_(), str))
+		self.assertTrue(isinstance(df1.__repr__(), str))

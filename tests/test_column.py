@@ -69,3 +69,7 @@ class TestLemurasColumns(unittest.TestCase):
 		self.assertEqual(df2['type'].max(), 0)
 		self.assertEqual(df1['type'].min(), 'A')
 		self.assertEqual(df1['type'].max(), 'B')
+
+	def test_repr(self):
+		self.assertTrue(isinstance(df1[0]._repr_html_(), str))
+		self.assertTrue(isinstance(df1[1].__repr__(), str))
