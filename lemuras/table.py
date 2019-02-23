@@ -87,13 +87,7 @@ class Table(object):
 	def set_column(self, column, data):
 		"""Sets values for existing column. First argument must be a column name or index.
 		Second argument must be either a list or a Column object."""
-
-		if isinstance(column, str):
-			name = column
-			ind = self.column_indices[column]
-		else:
-			name = self.columns[column]
-			ind = column
+		name, ind = (column, self.column_indices[column]) if isinstance(column, str) else (self.columns[column], column)
 
 		if isinstance(data, Column):
 			pass
@@ -136,12 +130,7 @@ class Table(object):
 
 	def delete_column(self, column):
 		"""Deletes column. Argument must be a column name or index."""
-		if isinstance(column, str):
-			name = column
-			ind = self.column_indices[column]
-		else:
-			name = self.columns[column]
-			ind = column
+		name, ind = (column, self.column_indices[column]) if isinstance(column, str) else (self.columns[column], column)
 		del self.columns[ind]
 		for row in self.rows:
 			del row[ind]
@@ -184,10 +173,7 @@ class Table(object):
 				raise ValueError('Table.add_row list argument must have length equal to columns count!')
 			row = []
 			for el in data:
-				if preprocess:
-					row.append(parse_value(el))
-				else:
-					row.append(el)
+				row.append(parse_value(el) if preprocess else el)
 			self.rows.append(row)
 		elif isinstance(data, dict):
 			row = []
@@ -198,10 +184,7 @@ class Table(object):
 					else:
 						row.append(empty)
 				else:
-					if preprocess:
-						row.append(parse_value(data[el]))
-					else:
-						row.append(data[el])
+					row.append(parse_value(data[el]) if preprocess else data[el])
 			self.rows.append(row)
 		else:
 			raise ValueError('Table.add_row argument must be either list or dict!')
@@ -563,7 +546,7 @@ class Table(object):
 		return res
 
 	@classmethod
-	def from_csv(cls, data, inline=True, empty=None, preprocess=True, title=None, delimiter=',', quotechar='"'):
+	def from_csv(cls, data, inline=True, empty=None, preprocess=True, title=None, delimiter=None, quotechar='"'):
 		"""Returns new Table object from CSV data.
 		If inline is True (default), then the first argument is considered
 		as a string with CSV data itself. Otherwise, the first argument

@@ -38,11 +38,7 @@ median = Q2
 
 
 def avg(lst):
-	# TODO: use call_with_numbers_only ?
-	if len(lst) > 0:
-		return 1.0 * sum(lst) / len(lst)
-	else:
-		return 0
+	return 1.0 * sum(lst) / len(lst)
 
 
 def std(lst, ddof=0, mean=None):
@@ -64,6 +60,13 @@ def nunique(lst):
 	return len(set(lst))
 
 
+def nulls(lst):
+	res = 0
+	for el in lst:
+		res +=  el is None
+	return res
+
+
 aggfuns = {
 	'avg': call_with_numbers_only(avg),
 	'mean': call_with_numbers_only(avg),
@@ -80,7 +83,10 @@ aggfuns = {
 	'count': len,
 	'first': lambda x: x[0] if len(x) > 0 else None,
 	'last': lambda x: x[-1] if len(x) > 0 else None,
+	'get': lambda x, y: x[y] if len(x) > 0 else None,
 	'nunique': nunique,
+	'nulls': nulls,
+	'nones': nulls,
 }
 
 
@@ -100,7 +106,7 @@ def tryInt(val, default=0):
 		return default
 
 
-def tryFloat(val, default=0):
+def tryFloat(val, default=0.0):
 	try:
 		return float(val)
 	except:
