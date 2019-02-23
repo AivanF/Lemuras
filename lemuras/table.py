@@ -232,10 +232,6 @@ class Table(object):
 		else:
 			print('Table.rename on incorrect column {}'.format(oldname))
 
-	def apply(self, ind, task, *args, **kwargs):
-		# For compatibility with old versions
-		return self[ind].apply(task, *args, **kwargs)
-
 	def calc(self, task, *args, **kwargs):
 		res = []
 		row = Row(self, 0)
