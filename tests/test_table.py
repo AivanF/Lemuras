@@ -1,17 +1,7 @@
-from lemuras import Table, Column
 import unittest
+from lemuras import Table, Column
+from .sample_data import cols, rows, df1
 
-
-cols = ['type', 'size', 'weight', 'tel']
-rows = [
-	['A', 1, 12, None],
-	['B', 4, 12, 84505505151],
-	['A', 3, 10, '+31415926535'],
-	['B', 6, 14, ''],
-	['A', 4, 10, '23816326412'],
-	['A', 2, 12, 0],
-]
-df1 = Table(cols, rows)
 shift = 4
 
 
@@ -25,7 +15,10 @@ class TestLemurasTable(unittest.TestCase):
 		# Nonexistent names must lead to specific error
 		# It is important due to __getattr__ overriding
 		with self.assertRaises(AttributeError) as context:
-			x = df1['size'].random_name
+			x = df1.random_name
+
+		with self.assertRaises(KeyError) as context:
+			x = df1['random_name']
 
 	def test_loc_linked(self):
 		df2 = df1.copy()
@@ -59,11 +52,12 @@ class TestLemurasTable(unittest.TestCase):
 		self.assertTrue('Column' in str(context.exception))
 
 	def test_apply(self):
-		self.assertEqual(df1.isnull().sum()['sum'].sum(), 1)
+		self.assertEqual(df1.isnull().sum()['sum'].sum(), 2)
 
 	def test_calc(self):
 		res = df1.calc(lambda row: row['size']*row['weight'])
-		self.assertEqual(res.sum(), 238)
+		check = df1['size']*df1['weight']
+		self.assertEqual(res.sum(), check.sum())
 
 	def test_sort_iterate(self):
 		df2 = df1.copy()
@@ -155,6 +149,8 @@ class TestLemurasTable(unittest.TestCase):
 		self.assertEqual(agg_sum2, df1['weight'].sum())
 		self.assertEqual(agg_cnt, df1.rowcnt)
 
+		self.assertEqual(df1.folds(1)[0], df1)
+
 	def test_row(self):
 		df2 = df1.copy()
 
@@ -186,6 +182,32 @@ class TestLemurasTable(unittest.TestCase):
 
 		self.assertTrue(isinstance(df1.row(0)._repr_html_(), str))
 		self.assertTrue(isinstance(df1.row(-1).__repr__(), str))
+
+	def test_delete_row(self):
+		df2 = df1.copy()
+		df2.delete_row(0)
+		df2.delete_row(-1)
+		self.assertEqual(df2.rowcnt+2, df1.rowcnt)
+		self.assertEqual(df2['size'][0], df1['size'][1])
+		self.assertEqual(df2['size'][-1], df1['size'][-2])
+
+	def test_add_row(self):
+		df2 = df1.copy()
+		with self.assertRaises(ValueError) as context:
+			df2.add_row('String')
+		self.assertTrue('list' in str(context.exception))
+		self.assertTrue('dict' in str(context.exception))
+
+		# Strict mode is on by default
+		with self.assertRaises(ValueError) as context:
+			df2.add_row({})
+
+		# No error must occur
+		df2.add_row({}, strict=False)
+
+		with self.assertRaises(ValueError) as context:
+			df2.add_row([])
+		self.assertTrue('len' in str(context.exception))
 
 	def test_repr(self):
 		self.assertTrue(isinstance(df1._repr_html_(), str))

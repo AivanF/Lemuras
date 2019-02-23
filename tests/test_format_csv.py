@@ -1,6 +1,5 @@
-from lemuras import Table
 import unittest
-
+from lemuras import Table
 
 tsv_table = """ID	Name	Date
 31415	Aivan	1983-09-14

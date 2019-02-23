@@ -1,6 +1,5 @@
-from lemuras import Table
 import unittest
-
+from lemuras import Table
 
 html_table = """
 <table>

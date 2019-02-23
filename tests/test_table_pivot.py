@@ -1,6 +1,5 @@
-from lemuras import Table, Column
 import unittest
-
+from lemuras import Table, Column
 
 cols = ['x', 'y', 'val']
 rows = [
