@@ -176,6 +176,18 @@ class TestLemurasTable(unittest.TestCase):
 		with self.assertRaises(IndexError) as context:
 			df2.row(1)[111]
 
+		row = df2.row(1)
+		self.assertEqual(len(row), df2.colcnt)
+		self.assertEqual(row.colcnt, df2.colcnt)
+		self.assertEqual(row.columns, df2.columns)
+		self.assertTrue(isinstance(row.get_type()[0], str))
+
+		with self.assertRaises(ValueError) as context:
+			row.calc('random_name')
+
+		with self.assertRaises(AttributeError) as context:
+			x = row.random_name
+
 		for row in df2:
 			for i, el in enumerate(row):
 				self.assertEqual(el, row[i])
