@@ -73,7 +73,7 @@ class Grouped(object):
 				vals[step].append(row[i])
 				step += 1
 
-	def __agglist__(self, keys, cols):
+	def _agglist(self, keys, cols):
 		"""Applies aggregation functions on given group."""
 		res = keys
 		for target_name in self.fun:
@@ -81,19 +81,27 @@ class Grouped(object):
 			for new_name in self.fun[target_name]:
 				task = self.fun[target_name][new_name]
 				if isinstance(task, str):
-					# print('Grouped {} -> {} Agg with {}'.format(target_name, new_name, task))
-					res.append(aggfuns[task](cur_col))
+					if task in aggfuns:
+						# print('Grouped {} -> {} Agg with {}'.format(target_name, new_name, task))
+						res.append(aggfuns[task](cur_col))
+					else:
+						raise ValueError('Aggregation function "{}" does not exist!'.format(task))
 				else:
-					res.append(task(cur_col))
+					if callable(task):
+						res.append(task(cur_col))
+					else:
+						raise ValueError('Aggregation function must be a callable!')
 		return res
 
-	def __recurs__(self, vals, keys, task):
+	def _recurs(self, task, vals=None, keys=None):
 		"""Recursive method to move through grouping keys.
 		Task takes list of keys values and list of columns."""
+		vals = self.values if vals is None else vals
+		keys = [] if keys is None else keys
 		res = []
 		if isinstance(vals, dict):
 			for key in vals:
-				res.extend(self.__recurs__(vals[key], keys + [key], task))
+				res.extend(self._recurs(task, vals[key], keys + [key]))
 		elif iscollection(vals):
 			v = task(keys, vals)
 			if v is not None:
@@ -115,6 +123,11 @@ class Grouped(object):
 				if isinstance(default_fun, dict):
 					for key in default_fun:
 						fun[target_name]['{}_{}'.format(target_name, key)] = default_fun[key]
+				elif iscollection(default_fun):
+					for task in default_fun:
+						if not isinstance(task, str):
+							raise ValueError('Default functions in a list must be string names!')
+						fun[target_name]['{}_{}'.format(target_name, task)] = task
 				else:
 					fun[target_name][target_name] = default_fun
 
@@ -123,29 +136,31 @@ class Grouped(object):
 		for target_name in fun:
 			for new_name in fun[target_name]:
 				cols.append(new_name)
-		rows = self.__recurs__(self.values, [], self.__agglist__)
+		rows = self._recurs(self._agglist)
 		return Table(cols, rows, 'Aggregated')
 
-	def __make_group__(self, keys, cols, should_add_keys):
+	def _make_group(self, keys, cols, add_keys, pairs):
 		t = 'Group '
 		for i in range(len(self.keys)):
 			t += '{}={} '.format(self.keys[i], keys[i])
 		res = Table([], [], t[:-1])
-		if should_add_keys:
+		if add_keys:
 			for i in range(len(self.keys)):
 				res[self.keys[i]] = [keys[i]] * len(cols[0])
 		for el in self.columns:
 			res[el] = cols[self.columns[el]]
-		return res
+		if pairs:
+			return dict(zip(self.keys, keys)), res
+		else:
+			return res
 
-	def split(self, should_add_keys=True):
+	def split(self, add_keys=True, pairs=False):
 		"""Returns a list with new Table objects - different groups."""
-		return self.__recurs__(self.values, [], lambda keys, cols: self.__make_group__(keys, cols, should_add_keys))
+		return self._recurs(lambda keys, cols: self._make_group(keys, cols, add_keys, pairs))
 
-	def get_group(self, search_keys, should_add_keys=True):
+	def get_group(self, search_keys, add_keys=True):
 		"""Returns None or new Table objects as a group with specified keys."""
-		if not iscollection(search_keys):
-			search_keys = [search_keys]
+		search_keys = search_keys if iscollection(search_keys) else [search_keys]
 		def findTable(keys, cols):
 			well = True
 			for i in range(len(keys)):
@@ -153,8 +168,8 @@ class Grouped(object):
 					well = False
 					break
 			if well:
-				return self.__make_group__(keys, cols, should_add_keys)
-		res = self.__recurs__(self.values, [], findTable)
+				return self._make_group(keys, cols, add_keys, pairs=False)
+		res = self._recurs(findTable)
 		if len(res) > 0:
 			return res[0]
 		else:
@@ -164,7 +179,7 @@ class Grouped(object):
 		"""Returns new Table object with counts of the groups."""
 		rows = []
 		todo = lambda x, y: rows.append(x + [len(y[0])])
-		self.__recurs__(self.values, [], todo)
+		self._recurs(todo)
 		return Table(self.keys + ['rows'], rows, 'Groups')
 
 	def _repr_html_(self):
