@@ -74,7 +74,9 @@ class TestLemurasColumns(unittest.TestCase):
 		self.assertEqual(df1['size'].min(), 1)
 		self.assertEqual(df1['size'].max(), 6)
 		self.assertEqual(df1['size'].first(), 1)
+		self.assertEqual(df1['size'].get(0), 1)
 		self.assertEqual(df1['size'].last(), 2)
+		self.assertEqual(df1['size'].get(-1), 2)
 		self.assertEqual(df1['tel'].first(), df1['tel'][0])
 		self.assertEqual(df1['tel'].last(), df1['tel'][-1])
 		self.assertEqual(df1['tel'].nulls(), df1['tel'].isnull().sum())
@@ -137,6 +139,7 @@ class TestLemurasColumns(unittest.TestCase):
 		self.assertEqual(df1['type'].max(), 'B')
 
 	def test_repr(self):
-		temp = Column([df1[0].get_values()] + [df1[1].get_values()] + [df1[2].get_values()])
+		temp = Column(list(df1[0].get_values()) + list(df1[1].get_values()) + list(df1[2].get_values()))
+		self.assertTrue(temp.rowcnt > 10)
 		self.assertTrue(isinstance(temp._repr_html_(), str))
 		self.assertTrue(isinstance(temp.__repr__(), str))
