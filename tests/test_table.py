@@ -97,12 +97,23 @@ class TestLemurasTable(unittest.TestCase):
 		df2['size'] = data
 		df2['size'] = data.values
 		data.values = data.values[1:]
+
 		with self.assertRaises(ValueError) as context:
 			df2['size'] = data
 		self.assertTrue('len' in str(context.exception))
-		
+
 		with self.assertRaises(ValueError) as context:
 			df2['size'] = 'test,sample data'
+		self.assertTrue('Column' in str(context.exception))
+
+		# It is a different method for adding new column than for replacing and old one
+		# So, it must be checked too
+		with self.assertRaises(ValueError) as context:
+			df2['new'] = data
+		self.assertTrue('len' in str(context.exception))
+
+		with self.assertRaises(ValueError) as context:
+			df2['new'] = 'test,sample data'
 		self.assertTrue('Column' in str(context.exception))
 
 	def test_from_columns(self):
