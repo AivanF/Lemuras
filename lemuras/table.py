@@ -382,8 +382,7 @@ class Table(object):
 
 		doleft = (how == 'left') or (how == 'outer')
 		doright = (how == 'right') or (how == 'outer')
-		if not iscollection(keys):
-			keys = [keys]
+		keys = keys if iscollection(keys) else [keys]
 
 		rescol = []
 		resrow = []
