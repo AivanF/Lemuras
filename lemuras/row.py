@@ -14,7 +14,7 @@ __license__ = """License:
  appropriate credit, provide a link to the original file, and indicate if changes were made.
  This notice may not be removed or altered from any source distribution."""
 
-from .utils import repr_cell
+from .utils import repr_cell, get_type
 from .processing import aggfuns, typefuns, applyfuns
 
 
