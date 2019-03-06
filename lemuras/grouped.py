@@ -131,6 +131,10 @@ class Grouped(object):
 				else:
 					fun[target_name][target_name] = default_fun
 
+		for target_name in fun:
+			if not isinstance(fun[target_name], dict):
+				fun[target_name] = {target_name: fun[target_name]}
+
 		self.fun = fun
 		cols = self.keys
 		for target_name in fun:

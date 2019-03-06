@@ -232,6 +232,12 @@ class Table(object):
 		else:
 			print('Table.rename on incorrect column {}'.format(oldname))
 
+	def make_index(self, title=None):
+		res = Column.make_index(self.rowcnt)
+		if title is not None:
+			self[title] = res
+		return res
+
 	def calc(self, task, *args, **kwargs):
 		res = []
 		row = Row(self, 0)
@@ -239,33 +245,6 @@ class Table(object):
 			row.row_index = i
 			res.append(task(row, *args, **kwargs))
 		return Column(res, 'Calc')
-
-	def __getattr__(self, attr):
-		if attr in aggfuns:
-			# Returns new Table object with applied aggregation function to all the columns
-			def inner(*args, **kwargs):
-				rows = []
-				for col in self.columns:
-					val = self[col].calc(attr, *args, **kwargs) 
-					rows.append([ col, val ])
-				title = '{}.{}()'.format(self.title, attr)
-				return Table(['Column', attr], rows, title)
-			return inner
-		elif attr in applyfuns:
-			# Returns new Table object with applied function to all the values
-			def inner(*args, **kwargs):
-				title = '{}.{}()'.format(self.title, attr)
-				columns = [self[col].apply(attr, separate=True, *args, **kwargs) for col in self.columns]
-				return Table.from_columns(columns, title=title)
-			return inner
-		elif attr in typefuns:
-			# Changes types of all the table values
-			def inner(*args, **kwargs):
-				for col in self.columns:
-					self[col].apply(attr)
-			return inner
-		else:
-			raise AttributeError('Applied function named "{}" does not exist!'.format(attr))
 
 	def loc(self, prism, separate=False):
 		"""Returns new Table as filtered current one by given Column object with boolean values"""
@@ -509,6 +488,33 @@ class Table(object):
 		for key in query:
 			checker = checker & (self[key] == query[key])
 		return self.loc(checker)
+
+	def __getattr__(self, attr):
+		if attr in aggfuns:
+			# Returns new Table object with applied aggregation function to all the columns
+			def inner(*args, **kwargs):
+				rows = []
+				for col in self.columns:
+					val = self[col].calc(attr, *args, **kwargs) 
+					rows.append([ col, val ])
+				title = '{}.{}()'.format(self.title, attr)
+				return Table(['Column', attr], rows, title)
+			return inner
+		elif attr in applyfuns:
+			# Returns new Table object with applied function to all the values
+			def inner(*args, **kwargs):
+				title = '{}.{}()'.format(self.title, attr)
+				columns = [self[col].apply(attr, separate=True, *args, **kwargs) for col in self.columns]
+				return Table.from_columns(columns, title=title)
+			return inner
+		elif attr in typefuns:
+			# Changes types of all the table values
+			def inner(*args, **kwargs):
+				for col in self.columns:
+					self[col].apply(attr)
+			return inner
+		else:
+			raise AttributeError('Applied function named "{}" does not exist!'.format(attr))
 
 	def __len__(self):
 		return self.rowcnt

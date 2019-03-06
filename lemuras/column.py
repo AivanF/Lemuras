@@ -77,6 +77,10 @@ class Column(object):
 	def make(cls, length, value=0, title=None):
 		return cls([value]*length, title)
 
+	@classmethod
+	def make_index(cls, length, title=None):
+		return cls(list(range(length)), title)
+
 	def get_type(self):
 		"""Returns column type and max symbols length."""
 		limit = len(self)
