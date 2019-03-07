@@ -267,7 +267,7 @@ class Table(object):
 			columns = self.columns
 		return Table(columns, res, title)
 
-	def sort(self, cols, asc=True):
+	def sort(self, cols, asc=True, default=None):
 		"""Sorts rows in place.
 		First argument must be a column name or a list of them.
 		Second argument may be a boolean or a list of them."""
@@ -283,7 +283,7 @@ class Table(object):
 				order = asc[l - 1 - i]
 			else:
 				order = asc
-			self.rows = sorted(self.rows, key=lambda x: x[ind], reverse=not order)
+			self.rows = sorted(self.rows, key=lambda x: (default if x[ind] is None else x[ind]), reverse=not order)
 
 	def copy(self):
 		"""Returns new Table as a deep copy of this one"""
