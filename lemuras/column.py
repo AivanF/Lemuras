@@ -135,7 +135,7 @@ class Column(object):
 				raise ValueError('Applied function named "{}" does not exist!'.format(task))
 		else:
 			# Custom functions lead to new Column object by default
-			separate = True if separate is None else separate
+			separate = False if separate is None else separate
 
 		if separate:
 			res = []
