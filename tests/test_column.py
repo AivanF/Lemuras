@@ -35,25 +35,27 @@ class TestLemurasColumns(unittest.TestCase):
 		self.assertTrue('does not exist' in str(context.exception))
 
 	def test_compare(self):
-		self.assertEqual((df1['weight'] == 12).sum(), 3)
-		self.assertEqual((df1['weight'] < 12).sum(), 1)
-		self.assertEqual((df1['weight'] > 12).sum(), 2)
-		self.assertEqual((df1['weight'] > df1['size']).sum(), 6)
+		df2 = df1.copy()
+		self.assertEqual((df2['weight'] == 12).sum(), 3)
+		self.assertEqual((df2['weight'] < 12).sum(), 1)
+		self.assertEqual((df2['weight'] > 12).sum(), 2)
+		self.assertEqual((df2['weight'] > df2['size']).sum(), 6)
 
 	def test_operators(self):
+		df2 = df1.copy()
 		# Simple math operations
-		self.assertEqual((df1['weight']-df1['size']).sum(), 55)
-		self.assertEqual((df1['weight']+df1['size']).sum(), 95)
-		self.assertEqual((df1['weight']*df1['size']).sum(), 258)
-		nega = df1['weight'] - df1['size'] * 10
+		self.assertEqual((df2['weight']-df2['size']).sum(), 55)
+		self.assertEqual((df2['weight']+df2['size']).sum(), 95)
+		self.assertEqual((df2['weight']*df2['size']).sum(), 258)
+		nega = df2['weight'] - df2['size'] * 10
 		self.assertTrue(nega.sum() < 0)
 		self.assertTrue(abs(nega).sum() > 0)
 		# Multiply by a float one because in Python 2 division doesn't convert int to float
-		self.assertEqual((df1['weight']*1.0/df1['size']).avg(), 5.069444444444444)
+		self.assertEqual((df2['weight']*1.0/df2['size']).avg(), 5.069444444444444)
 		# Logical operations & comparison
-		self.assertEqual(((df1['weight'] < 12)|(df1['weight'] > 12)).sum(), 3)
-		self.assertEqual(((df1['weight'] <= 12)&(df1['weight'] == 12)).sum(), (df1['weight'] == 12).sum())
-		self.assertEqual((~(df1['weight'] <= 12)).sum(), 2)
+		self.assertEqual(((df2['weight'] < 12)|(df2['weight'] > 12)).sum(), 3)
+		self.assertEqual(((df2['weight'] <= 12)&(df2['weight'] == 12)).sum(), (df2['weight'] == 12).sum())
+		self.assertEqual((~(df2['weight'] <= 12)).sum(), 2)
 		# Different lengths
 		with self.assertRaises(ValueError) as context:
 			x = df1['weight'] + [1, 3, 2]
@@ -62,30 +64,31 @@ class TestLemurasColumns(unittest.TestCase):
 		self.assertTrue(4 in df1['size'])
 
 	def test_agg(self):
-		self.assertEqual(df1['weight'].avg(), 12.5)
-		self.assertEqual(df1['weight'].std(), 1.6072751268321592)
-		self.assertEqual(df1['weight'].q1(), 12.0)
-		self.assertEqual(df1['weight'].median(), 12.0)
-		self.assertEqual(df1['weight'].q3(), 13.5)
-		self.assertEqual(df1['weight'].mode(), 12)
-		self.assertEqual(df1['weight'].count(), 6)
-		self.assertEqual(df1['weight'].nunique(), 4)
-		self.assertEqual(df1['type'].nunique(), 2)
-		self.assertEqual(df1['size'].min(), 1)
-		self.assertEqual(df1['size'].max(), 6)
-		self.assertEqual(df1['size'].first(), 1)
-		self.assertEqual(df1['size'].get(0), 1)
-		self.assertEqual(df1['size'].last(), 2)
-		self.assertEqual(df1['size'].get(-1), 2)
-		self.assertEqual(df1['tel'].first(), df1['tel'][0])
-		self.assertEqual(df1['tel'].last(), df1['tel'][-1])
-		self.assertEqual(df1['tel'].nulls(), df1['tel'].isnull().sum())
+		df2 = df1.copy()
+		self.assertEqual(df2['weight'].avg(), 12.5)
+		self.assertEqual(df2['weight'].std(), 1.6072751268321592)
+		self.assertEqual(df2['weight'].q1(), 12.0)
+		self.assertEqual(df2['weight'].median(), 12.0)
+		self.assertEqual(df2['weight'].q3(), 13.5)
+		self.assertEqual(df2['weight'].mode(), 12)
+		self.assertEqual(df2['weight'].count(), 6)
+		self.assertEqual(df2['weight'].nunique(), 4)
+		self.assertEqual(df2['type'].nunique(), 2)
+		self.assertEqual(df2['size'].min(), 1)
+		self.assertEqual(df2['size'].max(), 6)
+		self.assertEqual(df2['size'].first(), 1)
+		self.assertEqual(df2['size'].get(0), 1)
+		self.assertEqual(df2['size'].last(), 2)
+		self.assertEqual(df2['size'].get(-1), 2)
+		self.assertEqual(df2['tel'].first(), df2['tel'][0])
+		self.assertEqual(df2['tel'].last(), df2['tel'][-1])
+		self.assertEqual(df2['tel'].nulls(), df2['tel'].isnull().sum())
 
 		# Percentile function works a bit different for odd and even lengths
 		# So, let's test both options
-		temp = df1['weight'].copy()
-		temp.values.append(df1['weight'].mean())
-		self.assertEqual(temp.q2(), df1['weight'].q2())
+		temp = df2['weight'].copy()
+		temp.values.append(df2['weight'].mean())
+		self.assertEqual(temp.q2(), df2['weight'].q2())
 
 		empty = Column([], 'Empty')
 		# Thanks to @call_with_numbers_only and @call_with_existing_only
@@ -95,28 +98,30 @@ class TestLemurasColumns(unittest.TestCase):
 		self.assertEqual(empty.max(), None)
 
 	def test_types(self):
-		self.assertEqual(df1['tel'].copy().str().istype(str).sum(), df1.rowcnt)
-		self.assertEqual(df1['tel'].copy().int().istype(int).sum(), df1.rowcnt)
-		self.assertEqual(df1['tel'].copy().int().avg(), 36516353048.5)
-		self.assertEqual(df1['tel'].copy().int(default=None).avg(), 54774529572.75)
-		self.assertEqual(df1['tel'].copy().isnull().sum(), 1)
-		self.assertEqual(df1['tel'].copy().int().isnull().sum(), 0)
-		self.assertEqual(df1['tel'].copy().float().istype(float).sum(), df1.rowcnt)
-		self.assertEqual(df1['size'].copy().none_to(0).nulls(), 0)
+		df2 = df1.copy()
+		self.assertEqual(df2['tel'].copy().str().istype(str).sum(), df2.rowcnt)
+		self.assertEqual(df2['tel'].copy().int().istype(int).sum(), df2.rowcnt)
+		self.assertEqual(df2['tel'].copy().int().avg(), 36516353048.5)
+		self.assertEqual(df2['tel'].copy().int(default=None).avg(), 54774529572.75)
+		self.assertEqual(df2['tel'].copy().isnull().sum(), 1)
+		self.assertEqual(df2['tel'].copy().int().isnull().sum(), 0)
+		self.assertEqual(df2['tel'].copy().float().istype(float).sum(), df2.rowcnt)
+		self.assertEqual(df2['size'].copy().none_to(0).nulls(), 0)
 
 	def test_apply(self):
-		saved = df1['tel'].sum()
-		self.assertEqual(df1['tel'].lengths(strings_only=True).sum(), 34)
-		self.assertEqual(df1['tel'].lengths(strings_only=False).sum(), 49)
-		self.assertEqual(df1['size'].isin([1, 3]).sum(), 2)
+		df2 = df1.copy()
+		saved = df2['tel'].sum()
+		self.assertEqual(df2['tel'].lengths(strings_only=True).sum(), 34)
+		self.assertEqual(df2['tel'].lengths(strings_only=False).sum(), 49)
+		self.assertEqual(df2['size'].isin([1, 3]).sum(), 2)
 		self.assertEqual(cdates.date().istype(date), 3)
 
 		def func(value, a, b):
 			return value * b + a 
-		self.assertEqual(df1['size'].apply(func, 3, b=2).sum(), df1['size']*2+df1.rowcnt*3)
+		self.assertEqual(df2['size'].apply(func, 3, b=2).sum(), df2['size']*2+df2.rowcnt*3)
 
 		# Must be not changed
-		self.assertEqual(df1['tel'].sum(), saved)
+		self.assertEqual(df2['tel'].sum(), saved)
 
 	def test_folds(self):
 		folds = df1['weight'].folds(3)

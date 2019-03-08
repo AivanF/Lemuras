@@ -51,6 +51,11 @@ class TestLemurasTable(unittest.TestCase):
 			print(part)
 		self.assertTrue('Column' in str(context.exception))
 
+	def test_index(self):
+		df2 = df1.copy()
+		df2.make_index('id')
+		self.assertEqual(df2['id'].sum(), 15)
+
 	def test_apply(self):
 		self.assertEqual(df1.isnull().sum()['sum'].sum(), 2)
 
