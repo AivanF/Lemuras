@@ -25,16 +25,19 @@ from .row import Row
 
 class Table(object):
 	def __init__(self, columns, rows, title=None):
-		self.columns = columns
+		self._columns = columns
 		self.rows = rows
 		if title is None:
 			title = 'NoTitle'
 		self.title = title
-		self.column_indices = {}
 		self.types = None
-		for i in range(len(self.columns)):
-			self.column_indices[self.columns[i]] = i
 		self.idx = 0
+		self._calc_columns()
+
+	def _calc_columns(self):
+		self.column_indices = {}
+		for i in range(len(self._columns)):
+			self.column_indices[self._columns[i]] = i
 
 	def __iter__(self):
 		return self
@@ -52,8 +55,19 @@ class Table(object):
 	next = __next__
 
 	@property
+	def columns(self):
+		return self._columns
+
+	@columns.setter
+	def columns(self, news):
+		if len(news) != len(self._columns):
+			raise ValueError('New columns list must have the same length! It is {}, but {} expected'.format(len(news), len(self._columns)))
+		self._columns = news
+		self._calc_columns()
+
+	@property
 	def colcnt(self):
-		return len(self.columns)
+		return len(self._columns)
 
 	@property
 	def rowcnt(self):
@@ -80,14 +94,14 @@ class Table(object):
 		elif not isinstance(column, int):
 			raise KeyError('Bad column key "{}"'.format(column))
 		# Deep copy:
-		# return Column([row[column] for row in self.rows], self.columns[column])
+		# return Column([row[column] for row in self.rows], self._columns[column])
 		# Proxy object:
-		return Column(values=None, title=self.columns[column], table=self, source_name=self.columns[column])
+		return Column(values=None, title=self._columns[column], table=self, source_name=self._columns[column])
 
 	def set_column(self, column, data):
 		"""Sets values for existing column. First argument must be a column name or index.
 		Second argument must be either a list or a Column object."""
-		name, ind = (column, self.column_indices[column]) if isinstance(column, str) else (self.columns[column], column)
+		name, ind = (column, self.column_indices[column]) if isinstance(column, str) else (self._columns[column], column)
 
 		if isinstance(data, Column):
 			pass
@@ -117,30 +131,40 @@ class Table(object):
 
 		if self.rowcnt == 0 and self.colcnt == 0:
 			self.column_indices[title] = self.colcnt
-			self.columns.append(title)
+			self._columns.append(title)
 			for i in range(len(data)):
 				self.rows.append([data[i]])
 		else:
 			if len(data) != self.rowcnt:
 				raise ValueError('Table.add_column column length must be equal to table rows count!')
 			self.column_indices[title] = self.colcnt
-			self.columns.append(title)
+			self._columns.append(title)
 			for i in range(self.rowcnt):
 				self.rows[i].append(data[i])
 
 	def delete_column(self, column):
 		"""Deletes column. Argument must be a column name or index."""
-		name, ind = (column, self.column_indices[column]) if isinstance(column, str) else (self.columns[column], column)
-		del self.columns[ind]
+		name, ind = (column, self.column_indices[column]) if isinstance(column, str) else (self._columns[column], column)
+		del self._columns[ind]
 		for row in self.rows:
 			del row[ind]
-		self.column_indices.pop(name, None)
+		self._calc_columns()
+
+	def rename(self, oldname, newname):
+		"""Sets new name to a column."""
+		if oldname in self.column_indices:
+			if oldname != newname:
+				self._columns[self.column_indices[oldname]] = newname
+				self.column_indices[newname] = self.column_indices[oldname]
+				self.column_indices.pop(oldname, None)
+		else:
+			print('Table.rename on incorrect column {}'.format(oldname))
 
 	def __getitem__(self, column):
 		return self.column(column)
 
 	def __setitem__(self, column, data):
-		if column in self.columns:
+		if column in self._columns:
 			self.set_column(column, data)
 		else:
 			self.add_column(data, column)
@@ -163,7 +187,7 @@ class Table(object):
 		"""Returns a dictionary with row values."""
 		res = {}
 		for i in range(self.colcnt):
-			res[self.columns[i]] = self.rows[row_index][i]
+			res[self._columns[i]] = self.rows[row_index][i]
 		return res
 
 	def add_row(self, data, strict=True, empty=None, preprocess=False):
@@ -177,7 +201,7 @@ class Table(object):
 			self.rows.append(row)
 		elif isinstance(data, dict):
 			row = []
-			for el in self.columns:
+			for el in self._columns:
 				if el not in data:
 					if strict:
 						raise ValueError('Table.add_row dict argument does not have key ' + el + '!')
@@ -187,14 +211,14 @@ class Table(object):
 					row.append(parse_value(data[el]) if preprocess else data[el])
 			self.rows.append(row)
 		else:
-			raise ValueError('Table.add_row argument must be either list or dict!')
+			raise ValueError('Table.add_row argument must be either Row, list or dict!')
 
 	def delete_row(self, row_index=0):
 		del self.rows[row_index]
 
 	def find_types(self):
 		rows = []
-		for el in self.columns:
+		for el in self._columns:
 			tp, ln = self[el].get_type()
 			rows.append((el, tp, ln))
 		self.types = Table(['Column', 'Type', 'Symbols'], rows, 'Types')
@@ -221,16 +245,6 @@ class Table(object):
 			#     res.add_row(row)
 		res.title = "Concat"
 		return res
-
-	def rename(self, oldname, newname):
-		"""Sets new name to a column."""
-		if oldname in self.column_indices:
-			if oldname != newname:
-				self.columns[self.column_indices[oldname]] = newname
-				self.column_indices[newname] = self.column_indices[oldname]
-				self.column_indices.pop(oldname, None)
-		else:
-			print('Table.rename on incorrect column {}'.format(oldname))
 
 	def make_index(self, title=None):
 		res = Column.make_index(self.rowcnt)
@@ -262,9 +276,9 @@ class Table(object):
 		title = 'Filtered {}'.format(self.title)
 		if separate:
 			title += ' Copy'
-			columns = self.columns[:]
+			columns = self._columns[:]
 		else:
-			columns = self.columns
+			columns = self._columns
 		return Table(columns, res, title)
 
 	def sort(self, cols, asc=True, default=None):
@@ -287,7 +301,7 @@ class Table(object):
 
 	def copy(self):
 		"""Returns new Table as a deep copy of this one"""
-		cols = self.columns[:]
+		cols = self._columns[:]
 		rows = []
 		for row in self.rows:
 			rows.append(row[:])
@@ -302,7 +316,7 @@ class Table(object):
 		if not iscollection(keys):
 			keys = [keys]
 		from .grouped import Grouped
-		res = Grouped(keys, self.columns, self.column_indices)
+		res = Grouped(keys, self._columns, self.column_indices)
 		for row in self.rows:
 			res.add(row)
 		return res
@@ -494,7 +508,7 @@ class Table(object):
 			# Returns new Table object with applied aggregation function to all the columns
 			def inner(*args, **kwargs):
 				rows = []
-				for col in self.columns:
+				for col in self._columns:
 					val = self[col].calc(attr, *args, **kwargs) 
 					rows.append([ col, val ])
 				title = '{}.{}()'.format(self.title, attr)
@@ -504,13 +518,13 @@ class Table(object):
 			# Returns new Table object with applied function to all the values
 			def inner(*args, **kwargs):
 				title = '{}.{}()'.format(self.title, attr)
-				columns = [self[col].apply(attr, separate=True, *args, **kwargs) for col in self.columns]
+				columns = [self[col].apply(attr, separate=True, *args, **kwargs) for col in self._columns]
 				return Table.from_columns(columns, title=title)
 			return inner
 		elif attr in typefuns:
 			# Changes types of all the table values
 			def inner(*args, **kwargs):
-				for col in self.columns:
+				for col in self._columns:
 					self[col].apply(attr)
 			return inner
 		else:
@@ -543,7 +557,7 @@ class Table(object):
 				end = self.rowcnt
 				data = self.rows[begin:end] + self.rows[:start]
 				# print('[{}:{}] + [:{}]'.format(begin, end, start))
-			res.append(Table(self.columns, data, 'Part {} of {}'.format(i+1, self.title)))
+			res.append(Table(self._columns, data, 'Part {} of {}'.format(i+1, self.title)))
 		return res
 
 	@classmethod
@@ -582,13 +596,20 @@ class Table(object):
 					rows.append(row)
 		return Table(columns, rows, title)
 
-	def to_csv(self, file_name=None, delimiter=',', quotechar='"'):
+	def to_csv(self, file_name=None, delimiter=None, quotechar='"'):
 		"""Returns string with CSV representation of current Table.
 		If file_name is given, then the data is also written into the file."""
+
+		if delimiter is None:
+			if file_name is not None and '.tsv' in file_name:
+				delimiter = '\t'
+			else:
+				delimiter = ','
+
 		res = ''
 		with file_container('') as temp:
 			writer = csv.writer(temp, delimiter=delimiter, quotechar=quotechar)
-			writer.writerow(self.columns)
+			writer.writerow(self._columns)
 			for row in self.rows:
 				writer.writerow(row)
 			temp.seek(0)
@@ -733,11 +754,11 @@ class Table(object):
 		if as_dict:
 			for el in self.rows:
 				d = {}
-				for i in range(len(self.columns)):
+				for i in range(len(self._columns)):
 					if jsonable(el[i]):
-						d[self.columns[i]] = el[i]
+						d[self._columns[i]] = el[i]
 					else:
-						d[self.columns[i]] = str(el[i])
+						d[self._columns[i]] = str(el[i])
 				body.append(d)
 		else:
 			for el in self.rows:
@@ -748,7 +769,7 @@ class Table(object):
 					else:
 						cur.append(str(o))
 				body.append(cur)
-		res = { 'columns': self.columns, 'rows': body, 'title': self.title }
+		res = { 'columns': self._columns, 'rows': body, 'title': self.title }
 		if pretty:
 			res = json.dumps(res, indent=2, separators=(', ',': '))
 			res = res.replace(', \n      ', ', ')
@@ -806,7 +827,7 @@ class Table(object):
 	def html(self, cut=True):
 		showrowscnt, showcolscnt, hiddenrows, hiddencols = self.__need_cut__(cut)
 		res = '<table>\n<tr><th>'
-		res += '</th><th>'.join(map(lambda x: repr_cell(x), self.columns[:showcolscnt]))
+		res += '</th><th>'.join(map(lambda x: repr_cell(x), self._columns[:showcolscnt]))
 		if hiddencols:
 			res += '</th><th>...'
 		res += '</th></tr>\n'
@@ -826,7 +847,7 @@ class Table(object):
 		return res
 
 	def _repr_html_(self):
-		res = '<b>Table</b> object <b>{}</b>, {} columns, {} rows<br>\n'.format(self.title, len(self.columns), len(self.rows))
+		res = '<b>Table</b> object <b>{}</b>, {} columns, {} rows<br>\n'.format(self.title, len(self._columns), len(self.rows))
 		res += self.html()
 		return res
 
@@ -835,8 +856,8 @@ class Table(object):
 
 	def __str__(self):
 		showrowscnt, showcolscnt, hiddenrows, hiddencols = self.__need_cut__()
-		res = '- Table object, title: "{}", {} columns, {} rows.\n'.format(self.title, len(self.columns), len(self.rows))
-		res += ' '.join(map(lambda x: repr_cell(x, quote_strings=True), self.columns[:showcolscnt]))
+		res = '- Table object, title: "{}", {} columns, {} rows.\n'.format(self.title, len(self._columns), len(self.rows))
+		res += ' '.join(map(lambda x: repr_cell(x, quote_strings=True), self._columns[:showcolscnt]))
 		if hiddencols:
 			res += ' ...'
 		for row in self.rows[:showrowscnt]:
