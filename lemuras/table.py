@@ -176,6 +176,18 @@ class Table(object):
 			res.add_column(col)
 		return res
 
+	@classmethod
+	def from_rows(cls, rows, columns=None, title='From rows', preprocess=False):
+		if columns is None:
+			if len(rows) > 0:
+				columns = ['c{}'.format(i) for i in range(len(rows[0]))]
+			else:
+				columns = []
+		res = Table(columns, [], title)
+		for col in rows:
+			res.add_row(col, preprocess=preprocess)
+		return res
+
 	def row(self, row_index=0):
 		"""Returns a Row object."""
 		if isinstance(row_index, int) and row_index < self.rowcnt and row_index >= -self.rowcnt:
@@ -191,8 +203,8 @@ class Table(object):
 		return res
 
 	def add_row(self, data, strict=True, empty=None, preprocess=False):
-		"""Adds a row to the Table. The argument must be either list or dictionary."""
-		if iscollection(data):
+		"""Adds a row to the Table. The argument must be either Row object, list or dictionary."""
+		if iscollection(data) or isinstance(data, Row):
 			if len(data) != self.colcnt:
 				raise ValueError('Table.add_row list argument must have length equal to columns count!')
 			row = []
