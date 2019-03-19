@@ -19,10 +19,17 @@ from .processing import aggfuns, typefuns, applyfuns
 
 
 class Row(object):
-	def __init__(self, table, row_index):
+	def __init__(self, table=None, row_index=None, values=None):
+		if values is None:
+			if table is None or row_index is None:
+				raise ValueError('Both table and row_index must be set!')
+		else:
+			if table is not None:
+				raise ValueError('Either values or table must be not None!')
 		self.table = table
 		self.row_index = row_index
 		self.idx = 0
+		self.values = values
 
 	def __iter__(self):
 		return self
@@ -46,15 +53,34 @@ class Row(object):
 	def columns(self):
 		return self.table.columns
 
+	def get_values(self):
+		if self.values is not None:
+			return self.values
+		else:
+			return map(lambda column: self[column], self.columns)
+
+	def get_value(self, column):
+		if self.values is not None:
+			# TODO: add strings support
+			return self.values[column]
+		else:
+			return self.table.cell(column, self.row_index)
+
+	def set_value(self, column, value):
+		if self.values is not None:
+			self.values[column] = value
+		else:
+			self.table.set_cell(column, self.row_index, value)
+
 	def __getitem__(self, column):
-		return self.table.cell(column, self.row_index)
+		return self.get_value(column)
 
 	def __setitem__(self, column, value):
-		self.table.set_cell(column, self.row_index, value)
+		self.set_value(column, value)
 
 	def get_type(self):
 		"""Returns row type and max symbols length."""
-		return get_type(self.table.rows[self.row_index])
+		return get_type(self.get_values())
 
 	def calc(self, task, *args, **kwargs):
 		""" Calculates an aggregated value by function or task name.
@@ -74,6 +100,10 @@ class Row(object):
 		else:
 			raise AttributeError('Applied function named "{}" does not exist!'.format(attr))
 
+	def copy(self):
+		"""Returns new Row as a deep copy of this one"""
+		return Row(values=list(self.get_values()), row_index=self.row_index)
+
 	def _repr_html_(self):
 		values = map(lambda x: repr_cell(x, quote_strings=True), self.table.rows[self.row_index])
 		res = '<b>Row</b> {} of table <b>{}</b><br>\n[{}]'.format(self.row_index, self.table.title, ','.join(values))
@@ -81,11 +111,17 @@ class Row(object):
 
 	def __len__(self):
 		"""Returns number of columns."""
-		return self.table.colcnt
+		if self.values is not None:
+			return len(self.values)
+		else:
+			return self.table.colcnt
 
 	def __str__(self):
-		values = map(lambda x: repr_cell(x, quote_strings=True), self.table.rows[self.row_index])
-		return '- Row {} of table "{}"\n[{}]'.format(self.row_index, self.table.title, ','.join(values))
+		values = map(lambda x: repr_cell(x, quote_strings=True), self.get_values())
+		if self.values is None:
+			return '- Row {} of table "{}"\n[{}]'.format(self.row_index, self.table.title, ','.join(values))
+		else:
+			return '- Row independent\n[{}]'.format(','.join(values))
 
 	def __repr__(self):
 		return self.__str__()
