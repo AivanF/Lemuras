@@ -169,7 +169,6 @@ class Column(object):
 		else:
 			raise AttributeError('Applied function named "{}" does not exist!'.format(attr))
 
-
 	def copy(self):
 		"""Returns new Column as a deep copy of this one"""
 		return Column(values=list(self.get_values()), title=self.title)
@@ -193,7 +192,10 @@ class Column(object):
 			n = 10
 			ns = True
 		values = map(lambda x: repr_cell(x, quote_strings=True), list(self.get_values())[:n])
-		res = '- Column "{}"\n{}'.format(self.title, ','.join(values))
+		if self.values is None:
+			res = '- Column "{}" of table "{}"\n{}'.format(self.title, self.table.title, ','.join(values))
+		else:
+			res = '- Column "{}"\n{}'.format(self.title, ','.join(values))
 		if ns:
 			res += ' . .'
 		return res
