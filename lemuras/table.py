@@ -75,13 +75,13 @@ class Table(object):
 
 	def cell(self, column, row_index=0):
 		"""Returns cell value by column name or index and a row index (default = 0)."""
-		if isinstance(column, str):
+		if isinstance(column, main_str):
 			column = self.column_indices[column]
 		return self.rows[row_index][column]
 
 	def set_cell(self, column, row_index, value):
 		"""Sets cell value by column name or index and a row index (default = 0)."""
-		if isinstance(column, str):
+		if isinstance(column, main_str):
 			column = self.column_indices[column]
 		self.rows[row_index][column] = value
 
@@ -101,7 +101,7 @@ class Table(object):
 	def set_column(self, column, data):
 		"""Sets values for existing column. First argument must be a column name or index.
 		Second argument must be either a list or a Column object."""
-		name, ind = (column, self.column_indices[column]) if isinstance(column, str) else (self._columns[column], column)
+		name, ind = (column, self.column_indices[column]) if isinstance(column, main_str) else (self._columns[column], column)
 
 		if isinstance(data, Column):
 			pass
@@ -144,7 +144,7 @@ class Table(object):
 
 	def delete_column(self, column):
 		"""Deletes column. Argument must be a column name or index."""
-		name, ind = (column, self.column_indices[column]) if isinstance(column, str) else (self._columns[column], column)
+		name, ind = (column, self.column_indices[column]) if isinstance(column, main_str) else (self._columns[column], column)
 		del self._columns[ind]
 		for row in self.rows:
 			del row[ind]
@@ -303,7 +303,7 @@ class Table(object):
 		l = len(cols)
 		for i in range(l):
 			ind = cols[l - 1 - i]
-			if isinstance(ind, str):
+			if isinstance(ind, main_str):
 				ind = self.column_indices[ind]
 			if iscollection(asc):
 				order = asc[l - 1 - i]

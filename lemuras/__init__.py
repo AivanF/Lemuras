@@ -17,3 +17,4 @@ name = 'lemuras'
 
 from .table import Table
 from .column import Column
+from .row import Row
