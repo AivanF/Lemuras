@@ -333,7 +333,7 @@ class Table(object):
 			res.add(row)
 		return res
 
-	def pivot(self, newcol, newrow, newval, empty=None, str_columns=True):
+	def pivot(self, newcol, newrow, newval, empty=None, str_columns=True, task='first'):
 		"""Returns new pivot Table based on current one.
 		Newcol is a name of column that will be used for columns.
 		Newrow is a name of column that will be used for rows.
@@ -361,7 +361,9 @@ class Table(object):
 				rowsels.append(currow)
 			if curcol not in vals:
 				vals[curcol] = {}
-			vals[curcol][currow] = curval
+			if currow not in vals[curcol]:
+				vals[curcol][currow] = Column([])
+			vals[curcol][currow].values.append(curval)
 
 		# Create plain rows
 		colsels = sorted(colsels)
@@ -371,7 +373,7 @@ class Table(object):
 			row = [currow]
 			for curcol in colsels:
 				if currow in vals[curcol]:
-					row.append(vals[curcol][currow])
+					row.append(vals[curcol][currow].calc(task))
 				else:
 					row.append(empty)
 			rows.append(row)
