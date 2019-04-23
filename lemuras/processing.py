@@ -99,9 +99,12 @@ def makeStr(val, default=None):
 		return default
 
 
-def tryInt(val, default=0):
+def tryInt(val, default=0, hard=True):
 	try:
-		return int(float(val))
+		if hard:
+			return int(float(val))
+		else:
+			return int(val)
 	except:
 		return default
 
@@ -185,7 +188,7 @@ applyfuns = {
 
 
 def parse_value(val, empty=None):
-	res = tryInt(val, None)
+	res = tryInt(val, None, hard=False)
 	if res is not None:
 		return res
 	else:
