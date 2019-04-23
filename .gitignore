@@ -1,4 +1,13 @@
 
-.ipynb_checkpoints
+# MacOS system files
 *.DS_Store
+
+# Python and Jupyter binary files
+.ipynb_checkpoints
 *.pyc
+
+# Assembly files for publishing
+*egg-info/*
+dist/*
+build/*
+coverage.xml
