@@ -5,7 +5,7 @@ with open('README-pypi.md', 'r') as f:
 
 setuptools.setup(
     name='Lemuras',
-    version='1.2.0',
+    version='1.2.1',
     author='AivanF.',
     author_email='projects@aivanf.com',
     description='A small Python library to deal with big tables',
