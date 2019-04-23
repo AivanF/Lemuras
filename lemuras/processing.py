@@ -101,7 +101,7 @@ def makeStr(val, default=None):
 
 def tryInt(val, default=0):
 	try:
-		return int(val)
+		return int(float(val))
 	except:
 		return default
 
@@ -135,18 +135,13 @@ def tryDate(val, default=None):
 	if not isinstance(val, str):
 		return default
 	try:
-		if len(val) > 8:
-			val = val[:10]
-			if '/' in val:
-				return datetime.strptime(val, '%d/%m/%Y').date()
-			elif '-' in val:
-				return datetime.strptime(val, '%Y-%m-%d').date()
-			elif '.' in val:
-				return datetime.strptime(val, '%d.%m.%Y').date()
-		elif len(val) > 6:
-			val = val[:8]
-			if '/' in val:
-				return datetime.strptime(val, '%m/%d/%y').date()
+		val = val.split(' ')[0]
+		if '/' in val:
+			return datetime.strptime(val, '%m/%d/%Y').date()
+		elif '-' in val:
+			return datetime.strptime(val, '%Y-%m-%d').date()
+		elif '.' in val:
+			return datetime.strptime(val, '%d.%m.%Y').date()
 	except ValueError:
 		pass
 	return default
