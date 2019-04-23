@@ -1,5 +1,5 @@
 __author__ = 'AivanF'
-__copyright__ = 'Copyright 2018, AivanF'
+__copyright__ = 'Copyright 2019, AivanF'
 __contact__ = 'projects@aivanf.com'
 
 import unittest
