@@ -90,7 +90,7 @@ aggfuns = {
 }
 
 
-def makeStr(val, default=None):
+def make_str(val, default=None):
 	if isinstance(val, str):
 		return val
 	elif default is None:
@@ -99,7 +99,7 @@ def makeStr(val, default=None):
 		return default
 
 
-def tryInt(val, default=0, hard=True):
+def parse_int(val, default=0, hard=True):
 	try:
 		if hard:
 			return int(float(val))
@@ -109,14 +109,14 @@ def tryInt(val, default=0, hard=True):
 		return default
 
 
-def tryFloat(val, default=0.0):
+def parse_float(val, default=0.0):
 	try:
 		return float(val)
 	except:
 		return default
 
 
-def tryDatetime(val, default=None):
+def parse_datetime(val, default=None):
 	if isinstance(val, datetime):
 		return val
 	if not isinstance(val, str):
@@ -155,11 +155,11 @@ def none_to(val, default=0):
 
 
 typefuns = {
-	'str': makeStr,
-	'int': tryInt,
-	'float': tryFloat,
+	'str': make_str,
+	'int': parse_int,
+	'float': parse_float,
 	'date': tryDate,
-	'datetime': tryDatetime,
+	'datetime': parse_datetime,
 	'none_to': none_to,
 }
 
@@ -188,15 +188,15 @@ applyfuns = {
 
 
 def parse_value(val, empty=None):
-	res = tryInt(val, None, hard=False)
+	res = parse_int(val, None, hard=False)
 	if res is not None:
 		return res
 	else:
-		res = tryFloat(val, None)
+		res = parse_float(val, None)
 		if res is not None:
 			return res
 		else:
-			res = tryDatetime(val, None)
+			res = parse_datetime(val, None)
 			if res is not None:
 				return res
 			else:
