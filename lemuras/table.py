@@ -547,11 +547,6 @@ class Table(object):
 	def __len__(self):
 		return self.rowcnt
 
-	@property
-	def count(self):
-		"""Returns number of cells - product of number of rows and columns."""
-		return self.rowcnt * self.colcnt
-
 	def folds(self, fold_count, start=0):
 		# Note that rows of created Table objects are
 		# the same objects as in the original Table.

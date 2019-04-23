@@ -10,7 +10,6 @@ class TestLemurasTable(unittest.TestCase):
 		self.assertEqual(df1.colcnt, len(cols))
 		self.assertEqual(df1.rowcnt, len(rows))
 		self.assertEqual(len(df1), len(rows))
-		self.assertEqual(df1.count, len(cols)*len(rows))
 
 		# Nonexistent names must lead to specific error
 		# It is important due to __getattr__ overriding
