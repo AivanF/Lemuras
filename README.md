@@ -18,7 +18,7 @@ Again, this library may be considered as a simplified analogue of Pandas, but no
 - **Tables concatenation** and **appending**.
 - **Pivot tables** creation.
 
-It was tasted on both Python **2.7** and Python **3.6**
+It is tasted on Python **2.7** and Python **3.4-3.7**
 
 
 ## Installation 
