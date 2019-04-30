@@ -32,10 +32,10 @@ All the features are described in notebook examples:
 
 In addition, there are several complex examples of solving a real world problems:
 
-- [Retargeting results report](https://github.com/AivanF/Lemuras/blob/master/examples/Complex%20Example%20-%20Retargeting%20results%20report.ipynb)
+1) [Retargeting results report](https://github.com/AivanF/Lemuras/blob/master/examples/Complex%20Example%20-%20Retargeting%20results%20report.ipynb)
 
-- [Filtration by location area](https://github.com/AivanF/Lemuras/blob/master/examples/Complex%20Example%202%20-%20Filtering%20by%20Location%20Area.ipynb)
+2) [Filtration by location area](https://github.com/AivanF/Lemuras/blob/master/examples/Complex%20Example%202%20-%20Filtering%20by%20Location%20Area.ipynb)
 
-- [OLAP reports parser](https://github.com/AivanF/Lemuras/blob/master/examples/Complex%20Example%203%20-%20Parsing%20OLAP%20Reports.ipynb) with CSV, TSV, and even XLS support
+3) [OLAP reports parser](https://github.com/AivanF/Lemuras/blob/master/examples/Complex%20Example%203%20-%20Parsing%20OLAP%20Reports.ipynb) with CSV, TSV, and even XLS support
 
 The code of Lemuras is well-commented, also there are many unit-tests, so, you can easily find useful information there. Contributions are welcome.
