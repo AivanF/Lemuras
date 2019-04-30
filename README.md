@@ -42,11 +42,13 @@ All the features are described in notebook examples:
 5) [Tables Concatenate / Append](https://github.com/AivanF/Lemuras/blob/master/examples/Example%205%20-%20Tables%20Concatenate%20Append.ipynb) – simple tables concatenation and appending.
 6) [Types, Read/Write, CSV, SQL, JSON, HTML](https://github.com/AivanF/Lemuras/blob/master/examples/Example%206%20-%20Types%20Read%20Write%20CSV%20SQL%20JSON%20HTML.ipynb) – description of Lemuras supported data types, saving to and loading from CSV, SQL, JSON, HTML formats.
 
-In addition, there are complex examples of solving a real world problems:
+In addition, there are several complex examples of solving a real world problems:
 
 - [Retargeting results report](https://github.com/AivanF/Lemuras/blob/master/examples/Complex%20Example%20-%20Retargeting%20results%20report.ipynb)
 
 - [Filtration by location area](https://github.com/AivanF/Lemuras/blob/master/examples/Complex%20Example%202%20-%20Filtering%20by%20Location%20Area.ipynb)
+
+- [OLAP reports parser](https://github.com/AivanF/Lemuras/blob/master/examples/Complex%20Example%203%20-%20Parsing%20OLAP%20Reports.ipynb) with CSV, TSV, and even XLS support
 
 The code of Lemuras is well-commented, also there are many unit-tests, so, you can easily find useful information there. Contributions are welcome.
 
