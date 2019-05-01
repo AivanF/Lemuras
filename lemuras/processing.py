@@ -132,7 +132,7 @@ def parse_datetime(val, default=None):
 	return default
 
 
-def tryDate(val, default=None):
+def parse_date(val, default=None):
 	if isinstance(val, date):
 		return val
 	if not isinstance(val, str):
@@ -158,7 +158,7 @@ typefuns = {
 	'str': make_str,
 	'int': parse_int,
 	'float': parse_float,
-	'date': tryDate,
+	'date': parse_date,
 	'datetime': parse_datetime,
 	'none_to': none_to,
 }
@@ -200,7 +200,7 @@ def parse_value(val, empty=None):
 			if res is not None:
 				return res
 			else:
-				res = tryDate(val, None)
+				res = parse_date(val, None)
 				if res is not None:
 					return res
 	res = str(val).lower()
