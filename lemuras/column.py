@@ -213,6 +213,9 @@ class Column(object):
 	def rowcnt(self):
 		return len(self)
 
+	def isin(self, other):
+		return Column([self.get_value(i) in other for i in range(len(self))])
+
 	def __contains__(self, item):
 		return item in self.get_values()
 
