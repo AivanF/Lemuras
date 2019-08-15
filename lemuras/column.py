@@ -173,6 +173,18 @@ class Column(object):
 		"""Returns new Column as a deep copy of this one"""
 		return Column(values=list(self.get_values()), title=self.title)
 
+	def loc(self, prism):
+		"""Returns new Column as filtered values by given column"""
+		if isinstance(prism, Column) or iscollection(prism):
+			if len(self) == len(prism):
+				data = [self.get_value(i) for i in range(self.rowcnt) if prism[i]]
+				title = 'Filtered {}'.format(self.title)
+				return Column(data, title=title)
+			else:
+				raise ValueError('Arument Column len must be the same')
+		else:
+			raise ValueError('Arument object must be a Column')
+
 	def _repr_html_(self):
 		n = len(self)
 		ns = False

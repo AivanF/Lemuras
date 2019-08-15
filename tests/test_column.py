@@ -143,6 +143,23 @@ class TestLemurasColumns(unittest.TestCase):
 		self.assertEqual(df1['type'].min(), 'A')
 		self.assertEqual(df1['type'].max(), 'B')
 
+	def test_loc(self):
+		a = Column([1,3,5,7], title='cA')
+		b = Column([1,2,3], title='cB')
+
+		# Wrong type
+		with self.assertRaises(ValueError) as context:
+			a.loc({3, 1, 4})
+
+		# Wrong length
+		with self.assertRaises(ValueError) as context:
+			a.loc(b.isin(a))
+
+		# Similar to Column(set(a)-set(b))
+		# but saves values order
+		res = a.loc(~a.isin(b))
+		self.assertTrue(set(res) == {5,7})
+
 	def test_repr(self):
 		temp = Column(list(df1[0].get_values()) + list(df1[1].get_values()) + list(df1[2].get_values()))
 		self.assertTrue(temp.rowcnt > 10)
