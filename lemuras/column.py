@@ -38,7 +38,7 @@ class Column(object):
 			raise ValueError('Either values or table must be given, not both of them!')
 		if table is not None and source_name is None:
 			raise ValueError('Table requres source_name argument!')
-		self.values = values
+		self.values = values if values is None or isinstance(values, list) else list(values)
 		self.title = title
 		self.table = table
 		self.source_name = source_name
@@ -205,9 +205,9 @@ class Column(object):
 			ns = True
 		values = map(lambda x: repr_cell(x, quote_strings=True), list(self.get_values())[:n])
 		if self.values is None:
-			res = '- Column "{}" of table "{}"\n{}'.format(self.title, self.table.title, ','.join(values))
+			res = '- Column "{}" of table "{}", {} values\n{}'.format(self.title, self.rowcnt, self.table.title, ','.join(values))
 		else:
-			res = '- Column "{}"\n{}'.format(self.title, ','.join(values))
+			res = '- Column "{}", {} values\n{}'.format(self.title, self.rowcnt, ','.join(values))
 		if ns:
 			res += ' . .'
 		return res
