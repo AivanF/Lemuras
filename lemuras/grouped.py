@@ -20,46 +20,48 @@ from .table import Table
 
 
 class Grouped(object):
-	def __init__(self, keys, columns, column_indices):
-		self.keys = keys
-		self.count = len(keys)
+	def __init__(self, key_columns, source_columns, source_column_indices, source_name):
+		self.source_name = source_name
+		self.keys = key_columns
+		self.key_count = len(key_columns)
 		# {'target_column_name': {'new_column_name': function}}
 		self.fun = None
 
 		# Indices of key columns in original table
-		self.gun = []
-		for el in keys:
-			self.gun.append(column_indices[el])
+		self.ownkey2srckey = []
+		for el in key_columns:
+			self.ownkey2srckey.append(source_column_indices[el])
 
-		# Columns names of aggregating rows
-		self.columns = {}
+		# Aggregating (non-key) column names -> result column ind
+		self.agg_column2ind = {}
 		# Whether old columns should be saved
-		self.column_indices = []
+		self.srccolumn_is_agg = []
 		step = 0
-		for cur in columns:
-			if cur not in keys:
-				self.column_indices.append(True)
-				self.columns[cur] = step
+		for cur in source_columns:
+			if cur not in key_columns:
+				self.srccolumn_is_agg.append(True)
+				self.agg_column2ind[cur] = step
 				step += 1
 			else:
-				self.column_indices.append(False)
+				self.srccolumn_is_agg.append(False)
 
-		# Dict of dict of ... of list with a list of columns
-		if self.count > 0:
+		# Dict of dict of ... of list with a list of agg columns
+		# Keys of dicts are unique values of key-column
+		if self.key_count > 0:
 			self.values = {}
 		else:
-			self.values = list_of_lists(len(self.columns))
+			self.values = list_of_lists(len(self.agg_column2ind))
 
 	def add(self, row):
 		vals = self.values
-		for i in range(self.count):
-			last = i == self.count - 1
-			ind = self.gun[i]
+		for i in range(self.key_count):
+			last = i == self.key_count - 1
+			ind = self.ownkey2srckey[i]
 			cur = row[ind]
 			if cur not in vals:
 				if last:
 					# store columns independently
-					vals[cur] = list_of_lists(len(self.columns))
+					vals[cur] = list_of_lists(len(self.agg_column2ind))
 				else:
 					# add one more dict layer
 					vals[cur] = {}
@@ -68,7 +70,7 @@ class Grouped(object):
 		# Save values with appropriate indices only - not key columns
 		step = 0
 		for i in range(len(row)):
-			if self.column_indices[i]:
+			if self.srccolumn_is_agg[i]:
 				# Columns-first structure
 				vals[step].append(row[i])
 				step += 1
@@ -77,7 +79,7 @@ class Grouped(object):
 		"""Applies aggregation functions on given group."""
 		res = keys
 		for target_name in self.fun:
-			cur_col = cols[self.columns[target_name]]
+			cur_col = cols[self.agg_column2ind[target_name]]
 			for new_name in self.fun[target_name]:
 				task = self.fun[target_name][new_name]
 				if isinstance(task, str):
@@ -117,7 +119,7 @@ class Grouped(object):
 		"""
 
 		if default_fun is not None:
-			for target_name in self.columns:
+			for target_name in self.agg_column2ind:
 				if target_name not in fun:
 					fun[target_name] = {}
 				if isinstance(default_fun, dict):
@@ -141,7 +143,7 @@ class Grouped(object):
 			for new_name in fun[target_name]:
 				cols.append(new_name)
 		rows = self._recurs(self._agglist)
-		return Table(cols, rows, 'Aggregated')
+		return Table(cols, rows, 'Aggregated ' + self.source_name)
 
 	def _make_group(self, keys, cols, add_keys, pairs):
 		t = 'Group '
@@ -151,8 +153,8 @@ class Grouped(object):
 		if add_keys:
 			for i in range(len(self.keys)):
 				res[self.keys[i]] = [keys[i]] * len(cols[0])
-		for el in self.columns:
-			res[el] = cols[self.columns[el]]
+		for el in self.agg_column2ind:
+			res[el] = cols[self.agg_column2ind[el]]
 		if pairs:
 			return dict(zip(self.keys, keys)), res
 		else:
@@ -187,13 +189,13 @@ class Grouped(object):
 		return Table(self.keys + ['rows'], rows, 'Groups')
 
 	def _repr_html_(self):
-		res = '<b>Grouped</b> object, keys: {}, old columns: {}.<br>\n'.format(
-			self.keys, list(self.columns.keys())
+		res = '<b>Grouped</b> object "{}", keys: {}, old columns: {}.<br>\n'.format(
+			self.source_name, self.keys, list(self.agg_column2ind.keys())
 		)
 		res += self.counts().html()
 		return res
 
 	def __repr__(self):
-		return '- Grouped object, keys: {}, old columns: {}.'.format(
-			self.keys, list(self.columns.keys())
+		return '- Grouped object "{}", keys: {}, old columns: {}.'.format(
+			self.source_name, self.keys, list(self.agg_column2ind.keys())
 		)

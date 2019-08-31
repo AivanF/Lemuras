@@ -60,10 +60,7 @@ def jsonable(o):
 
 
 def list_of_lists(cnt):
-	res = []
-	for i in range(cnt):
-		res.append([])
-	return res
+	return [[] for _ in range(cnt)]
 
 
 def iscollection(x):

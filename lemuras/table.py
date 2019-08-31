@@ -319,16 +319,20 @@ class Table(object):
 			rows.append(row[:])
 		return Table(cols, rows, self.title)
 
-	def groupby(self, keys=None):
+	def groupby(self, key_columns=None):
 		"""Returns new Grouped object for current Table.
 		Keys must be a list with columns names."""
 
-		if keys is None:
-			keys = []
-		if not iscollection(keys):
-			keys = [keys]
+		if key_columns is None:
+			key_columns = []
+		if not iscollection(key_columns):
+			# Assume it's just a column name
+			key_columns = [key_columns]
+		for name in key_columns:
+			if name not in self.columns:
+				raise ValueError('GroupBy arg "{}" is not a Table column name!'.format(name))
 		from .grouped import Grouped
-		res = Grouped(keys, self._columns, self.column_indices)
+		res = Grouped(key_columns, self._columns, self.column_indices, self.title)
 		for row in self.rows:
 			res.add(row)
 		return res

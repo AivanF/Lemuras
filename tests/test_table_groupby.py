@@ -11,6 +11,11 @@ class TestLemurasTableGroupby(unittest.TestCase):
 		df1 = Table(cols, rows)
 		self.gr = df1.groupby(['type', 'weight'])
 
+	def test_bad_key_column(self):
+		# There is no column named "typo"
+		with self.assertRaises(ValueError) as context:
+			df1.groupby('typo')
+
 	def test_groups(self):
 		dfc = self.gr.counts()
 		self.assertEqual(dfc.rowcnt, 5)
