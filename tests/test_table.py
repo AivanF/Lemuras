@@ -210,6 +210,21 @@ class TestLemurasTable(unittest.TestCase):
 		self.assertTrue(isinstance(df1.row(0)._repr_html_(), str))
 		self.assertTrue(isinstance(df1.row(-1).__repr__(), str))
 
+		# Changing value of linked row
+		df3 = df1.copy()
+		change = 5
+		was = df3['size'].sum()
+		r = df3.row(0)
+		r['size'] = r['size'] + change
+		self.assertEqual(was + change, df3['size'].sum())
+
+		# Changing value of separated linked row
+		df3 = df1.copy()
+		was = df3['size'].sum()
+		r = df3.row(0).copy()
+		r['size'] = r['size'] + 11
+		self.assertEqual(was, df3['size'].sum())
+
 	def test_delete_row(self):
 		df2 = df1.copy()
 		df2.delete_row(0)

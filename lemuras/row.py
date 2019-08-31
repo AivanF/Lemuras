@@ -14,22 +14,25 @@ __license__ = """License:
  appropriate credit, provide a link to the original file, and indicate if changes were made.
  This notice may not be removed or altered from any source distribution."""
 
-from .utils import repr_cell, get_type
+from .utils import main_str, repr_cell, get_type
 from .processing import aggfuns, typefuns, applyfuns
 
 
 class Row(object):
-	def __init__(self, table=None, row_index=None, values=None):
+	def __init__(self, table=None, row_index=None, values=None, columns=None):
 		if values is None:
 			if table is None or row_index is None:
 				raise ValueError('Both table and row_index must be set!')
 		else:
 			if table is not None:
 				raise ValueError('Either values or table must be not None!')
+			if columns is None:
+				columns = list(map(str, range(len(values))))
 		self.table = table
 		self.row_index = row_index
 		self.idx = 0
 		self.values = values
+		self.column_names = columns
 
 	def __iter__(self):
 		return self
@@ -47,11 +50,17 @@ class Row(object):
 
 	@property
 	def colcnt(self):
-		return self.table.colcnt
+		if self.values is not None:
+			return len(self.values)
+		else:
+			return self.table.colcnt
 
 	@property
 	def columns(self):
-		return self.table.columns
+		if self.values is not None:
+			return self.column_names
+		else:
+			return self.table.columns
 
 	def get_values(self):
 		if self.values is not None:
@@ -61,14 +70,19 @@ class Row(object):
 
 	def get_value(self, column):
 		if self.values is not None:
-			# TODO: add strings support
-			return self.values[column]
+			if isinstance(column, main_str):
+				return self.values[self.column_names.index(column)]
+			else:
+				return self.values[column]
 		else:
 			return self.table.cell(column, self.row_index)
 
 	def set_value(self, column, value):
 		if self.values is not None:
-			self.values[column] = value
+			if isinstance(column, main_str):
+				self.values[self.column_names.index(column)] = value
+			else:
+				self.values[column] = value
 		else:
 			self.table.set_cell(column, self.row_index, value)
 
@@ -102,7 +116,7 @@ class Row(object):
 
 	def copy(self):
 		"""Returns new Row as a deep copy of this one"""
-		return Row(values=list(self.get_values()), row_index=self.row_index)
+		return Row(values=list(self.get_values()), row_index=self.row_index, columns=self.columns)
 
 	def _repr_html_(self):
 		values = map(lambda x: repr_cell(x, quote_strings=True), self.table.rows[self.row_index])

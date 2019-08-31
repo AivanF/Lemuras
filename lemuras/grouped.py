@@ -184,8 +184,8 @@ class Grouped(object):
 	def counts(self):
 		"""Returns new Table object with counts of the groups."""
 		rows = []
-		todo = lambda x, y: rows.append(x + [len(y[0])])
-		self._recurs(todo)
+		task = lambda x, y: rows.append(x + [len(y[0])])
+		self._recurs(task)
 		return Table(self.keys + ['rows'], rows, 'Groups')
 
 	def _repr_html_(self):
