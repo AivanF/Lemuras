@@ -4,6 +4,7 @@ __contact__ = 'projects@aivanf.com'
 
 import unittest
 from tests.test_column import TestLemurasColumns
+from tests.test_row import TestLemurasRows
 from tests.test_table import TestLemurasTable
 from tests.test_table_pivot import TestLemurasTablePivot 
 from tests.test_table_concat import TestLemurasTableConcat

@@ -160,6 +160,12 @@ class TestLemurasColumns(unittest.TestCase):
 		res = a.loc(~a.isin(b))
 		self.assertTrue(set(res) == {5,7})
 
+	def test_iter(self):
+		# Nested loops over single object must work
+		r = Column(values=[2, 3])
+		# 2*2 + 2*3 + 3*2 + 3*3 = 4 + 12 + 9
+		self.assertEqual(sum((a*b for a in r for b in r)), 25)
+
 	def test_repr(self):
 		temp = Column(list(df1[0].get_values()) + list(df1[1].get_values()) + list(df1[2].get_values()))
 		self.assertTrue(temp.rowcnt > 10)

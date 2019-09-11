@@ -166,65 +166,6 @@ class TestLemurasTable(unittest.TestCase):
 
 		self.assertEqual(df1.folds(1)[0], df1)
 
-	def test_row(self):
-		df2 = df1.copy()
-
-		# Must pass without exceptions
-		df2.row(df2.rowcnt-1)
-		df2.row(-df2.rowcnt)
-
-		with self.assertRaises(IndexError) as context:
-			df2.row(df2.rowcnt)
-
-		with self.assertRaises(IndexError) as context:
-			df2.row(-df2.rowcnt-1)
-
-		with self.assertRaises(IndexError) as context:
-			df2.row(111)
-
-		with self.assertRaises(IndexError) as context:
-			df2.row('lol')
-
-		with self.assertRaises(KeyError) as context:
-			df2.row(1)['lol']
-
-		with self.assertRaises(IndexError) as context:
-			df2.row(1)[111]
-
-		row = df2.row(1)
-		self.assertEqual(len(row), df2.colcnt)
-		self.assertEqual(row.colcnt, df2.colcnt)
-		self.assertEqual(row.columns, df2.columns)
-		self.assertTrue(isinstance(row.get_type()[0], str))
-
-		with self.assertRaises(ValueError) as context:
-			row.calc('random_name')
-
-		with self.assertRaises(AttributeError) as context:
-			x = row.random_name
-
-		for row in df2:
-			for i, el in enumerate(row):
-				self.assertEqual(el, row[i])
-
-		self.assertTrue(isinstance(df1.row(0)._repr_html_(), str))
-		self.assertTrue(isinstance(df1.row(-1).__repr__(), str))
-
-		# Changing value of linked row
-		df3 = df1.copy()
-		change = 5
-		was = df3['size'].sum()
-		r = df3.row(0)
-		r['size'] = r['size'] + change
-		self.assertEqual(was + change, df3['size'].sum())
-
-		# Changing value of separated linked row
-		df3 = df1.copy()
-		was = df3['size'].sum()
-		r = df3.row(0).copy()
-		r['size'] = r['size'] + 11
-		self.assertEqual(was, df3['size'].sum())
-
 	def test_delete_row(self):
 		df2 = df1.copy()
 		df2.delete_row(0)
@@ -250,6 +191,15 @@ class TestLemurasTable(unittest.TestCase):
 		with self.assertRaises(ValueError) as context:
 			df2.add_row([])
 		self.assertTrue('len' in str(context.exception))
+
+	def test_iter(self):
+		# Nested loops over single object must work
+		total = 0
+		df2 = df1.copy()
+		for a in df2:
+			for b in df2:
+				total += a['size'] * b['size']
+		self.assertEqual(total, 400)
 
 	def test_repr(self):
 		self.assertTrue(isinstance(df1._repr_html_(), str))
