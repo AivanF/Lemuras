@@ -40,19 +40,7 @@ class Table(object):
 			self.column_indices[self._columns[i]] = i
 
 	def __iter__(self):
-		return self
-
-	def __next__(self):
-		self.idx += 1
-		try:
-			# return self.rows[self.idx-1]
-			return self.row(self.idx-1)
-		except IndexError:
-			self.idx = 0
-			raise StopIteration
-	
-	# Python 2.x compatibility
-	next = __next__
+		return iter(map(lambda i: self.row(i), range(self.rowcnt)))
 
 	@property
 	def columns(self):

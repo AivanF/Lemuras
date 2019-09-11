@@ -30,23 +30,11 @@ class Row(object):
 				columns = list(map(str, range(len(values))))
 		self.table = table
 		self.row_index = row_index
-		self.idx = 0
 		self.values = values
 		self.column_names = columns
 
 	def __iter__(self):
-		return self
-
-	def __next__(self):
-		self.idx += 1
-		try:
-			return self[self.idx-1]
-		except IndexError:
-			self.idx = 0
-			raise StopIteration
-	
-	# Python 2.x compatibility
-	next = __next__
+		return iter(self.get_values())
 
 	@property
 	def colcnt(self):
