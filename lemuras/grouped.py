@@ -35,15 +35,15 @@ class Grouped(object):
 		# Aggregating (non-key) column names -> result column ind
 		self.agg_column2ind = {}
 		# Whether old columns should be saved
-		self.srccolumn_is_agg = []
+		self.src_column_is_agg = []
 		step = 0
 		for cur in source_columns:
 			if cur not in key_columns:
-				self.srccolumn_is_agg.append(True)
+				self.src_column_is_agg.append(True)
 				self.agg_column2ind[cur] = step
 				step += 1
 			else:
-				self.srccolumn_is_agg.append(False)
+				self.src_column_is_agg.append(False)
 
 		# Dict of dict of ... of list with a list of agg columns
 		# Keys of dicts are unique values of key-column
@@ -60,17 +60,17 @@ class Grouped(object):
 			cur = row[ind]
 			if cur not in vals:
 				if last:
-					# store columns independently
+					# Store columns independently
 					vals[cur] = list_of_lists(len(self.agg_column2ind))
 				else:
-					# add one more dict layer
+					# Add one more dict layer
 					vals[cur] = {}
 			vals = vals[cur]
 
 		# Save values with appropriate indices only - not key columns
 		step = 0
 		for i in range(len(row)):
-			if self.srccolumn_is_agg[i]:
+			if self.src_column_is_agg[i]:
 				# Columns-first structure
 				vals[step].append(row[i])
 				step += 1
@@ -138,7 +138,7 @@ class Grouped(object):
 				fun[target_name] = {target_name: fun[target_name]}
 
 		self.fun = fun
-		cols = self.keys
+		cols = self.keys[:]
 		for target_name in fun:
 			for new_name in fun[target_name]:
 				cols.append(new_name)
@@ -146,9 +146,9 @@ class Grouped(object):
 		return Table(cols, rows, 'Aggregated ' + self.source_name)
 
 	def _make_group(self, keys, cols, add_keys, pairs):
-		t = 'Group '
+		t = 'Group'
 		for i in range(len(self.keys)):
-			t += '{}={} '.format(self.keys[i], keys[i])
+			t += ' {}={}'.format(self.keys[i], keys[i])
 		res = Table([], [], t[:-1])
 		if add_keys:
 			for i in range(len(self.keys)):
@@ -166,14 +166,15 @@ class Grouped(object):
 
 	def get_group(self, search_keys, add_keys=True):
 		"""Returns None or new Table objects as a group with specified keys."""
+		# TODO: add support for search_keys as dict
 		search_keys = search_keys if iscollection(search_keys) else [search_keys]
 		def findTable(keys, cols):
-			well = True
+			matched = True
 			for i in range(len(keys)):
 				if keys[i] != search_keys[i]:
-					well = False
+					matched = False
 					break
-			if well:
+			if matched:
 				return self._make_group(keys, cols, add_keys, pairs=False)
 		res = self._recurs(findTable)
 		if len(res) > 0:
@@ -184,7 +185,7 @@ class Grouped(object):
 	def counts(self):
 		"""Returns new Table object with counts of the groups."""
 		rows = []
-		task = lambda x, y: rows.append(x + [len(y[0])])
+		task = lambda keys, cols: rows.append(keys + [len(cols[0])])
 		self._recurs(task)
 		return Table(self.keys + ['rows'], rows, 'Groups')
 

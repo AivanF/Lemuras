@@ -48,7 +48,7 @@ class TestLemurasRows(unittest.TestCase):
 		self.assertTrue(isinstance(df1.row(0)._repr_html_(), str))
 		self.assertTrue(isinstance(df1.row(-1).__repr__(), str))
 
-	def test_linking(self):
+	def test_linked(self):
 		# Changing value of linked row
 		df2 = df1.copy()
 		change = 5
@@ -57,7 +57,9 @@ class TestLemurasRows(unittest.TestCase):
 		r['size'] = r['size'] + change
 		self.assertEqual(was + change, df2['size'].sum())
 
-		# Changing value of separated linked row
+
+	def test_separated(self):
+		# Changing value of separated row
 		df2 = df1.copy()
 		was = df2['size'].sum()
 		r = df2.row(0).copy()

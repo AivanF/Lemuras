@@ -7,7 +7,7 @@ cdates = Column(['2018-12-30', '14.09.1983', '02/15/1916'], 'Dates')
 
 
 class TestLemurasColumns(unittest.TestCase):
-	def test_basic(self):
+	def test_creation(self):
 		# Only either values or table (with source_name) must be set
 		with self.assertRaises(ValueError) as context:
 			x = Column()
@@ -16,6 +16,7 @@ class TestLemurasColumns(unittest.TestCase):
 		with self.assertRaises(ValueError) as context:
 			x = Column(table=df1)
 
+	def test_basic(self):
 		# Setting value
 		df2 = df1.copy()
 		df2['type'][1] = 'C'
@@ -114,6 +115,7 @@ class TestLemurasColumns(unittest.TestCase):
 		self.assertEqual(df2['tel'].lengths(strings_only=True).sum(), 34)
 		self.assertEqual(df2['tel'].lengths(strings_only=False).sum(), 49)
 		self.assertEqual(df2['size'].isin([1, 3]).sum(), 2)
+		# TODO: why no .sum is here????
 		self.assertEqual(cdates.date().istype(date), 3)
 
 		def func(value, a, b):

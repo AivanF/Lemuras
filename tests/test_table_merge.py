@@ -27,13 +27,6 @@ cnt_right = 1
 
 
 class TestLemurasTableMerge(unittest.TestCase):
-	def test_outer(self):
-		df3 = Table.merge(df1, df2, ['type', 'size'], 'outer')
-		self.assertEqual(df3.rowcnt, cnt_inner+cnt_left+cnt_right)
-		self.assertEqual(df3.columns, ['type', 'size', 'weight', 'tel', 'cost'])
-		self.assertEqual(df3.nunique()[1].sum(), 23)
-		self.assertEqual(df3['weight'].sum(), 74)
-
 	def test_inner(self):
 		df3 = Table.merge(df1, df2, ['type', 'size'], 'inner')
 		self.assertEqual(df3.rowcnt, cnt_inner)
@@ -54,3 +47,10 @@ class TestLemurasTableMerge(unittest.TestCase):
 		self.assertEqual(df3.columns, ['type', 'size', 'weight', 'tel', 'cost'])
 		self.assertEqual(df3.nunique()[1].sum(), 16)
 		self.assertEqual(df3['weight'].sum(), 34)
+
+	def test_outer(self):
+		df3 = Table.merge(df1, df2, ['type', 'size'], 'outer')
+		self.assertEqual(df3.rowcnt, cnt_inner+cnt_left+cnt_right)
+		self.assertEqual(df3.columns, ['type', 'size', 'weight', 'tel', 'cost'])
+		self.assertEqual(df3.nunique()[1].sum(), 23)
+		self.assertEqual(df3['weight'].sum(), 74)

@@ -37,7 +37,7 @@ class Column(object):
 		if values is not None and table is not None:
 			raise ValueError('Either values or table must be given, not both of them!')
 		if table is not None and source_name is None:
-			raise ValueError('Table requres source_name argument!')
+			raise ValueError('Column linking requires source_name argument!')
 		self.values = values if values is None or isinstance(values, list) else list(values)
 		self.title = title
 		self.table = table
@@ -134,7 +134,6 @@ class Column(object):
 			else:
 				raise ValueError('Applied function named "{}" does not exist!'.format(task))
 		else:
-			# Custom functions lead to new Column object by default
 			separate = False if separate is None else separate
 
 		if separate:
@@ -181,9 +180,9 @@ class Column(object):
 				title = 'Filtered {}'.format(self.title)
 				return Column(data, title=title)
 			else:
-				raise ValueError('Arument Column len must be the same')
+				raise ValueError('Argument Column len must be the same')
 		else:
-			raise ValueError('Arument object must be a Column')
+			raise ValueError('Argument object must be a Column')
 
 	def _repr_html_(self):
 		n = len(self)
@@ -205,7 +204,7 @@ class Column(object):
 			ns = True
 		values = map(lambda x: repr_cell(x, quote_strings=True), list(self.get_values())[:n])
 		if self.values is None:
-			res = '- Column "{}" of table "{}", {} values\n{}'.format(self.title, self.rowcnt, self.table.title, ','.join(values))
+			res = '- Column "{}" of table "{}", {} values\n{}'.format(self.title, self.table.title, self.rowcnt, ','.join(values))
 		else:
 			res = '- Column "{}", {} values\n{}'.format(self.title, self.rowcnt, ','.join(values))
 		if ns:
@@ -225,9 +224,6 @@ class Column(object):
 	def rowcnt(self):
 		return len(self)
 
-	def isin(self, other):
-		return Column([self.get_value(i) in other for i in range(len(self))])
-
 	def __contains__(self, item):
 		return item in self.get_values()
 
@@ -242,6 +238,9 @@ class Column(object):
 				raise ValueError('Others Column len must be the same')
 		else:
 			return Column([operator(el, other) for el in self.get_values()])
+
+	def isin(self, other):
+		return self.__operator1__(lambda x: x in other)
 
 	def __invert__(self):
 		return self.__operator1__(own_invert)
@@ -258,6 +257,9 @@ class Column(object):
 	def __xor__(self, other):
 		return self.__operator2__(other, operator.__xor__)
 
+	def __concat__(self, other):
+		return self.__operator2__(other, operator.__concat__)
+
 	def __add__(self, other):
 		return self.__operator2__(other, operator.__add__)
 
@@ -266,12 +268,6 @@ class Column(object):
 
 	def __mul__(self, other):
 		return self.__operator2__(other, operator.__mul__)
-
-	def __pow__(self, other):
-		return self.__operator2__(other, operator.__pow__)
-
-	def __mod__(self, other):
-		return self.__operator2__(other, operator.__mod__)
 
 	def __floordiv__(self, other):
 		return self.__operator2__(other, operator.__floordiv__)
@@ -282,11 +278,11 @@ class Column(object):
 	def __div__(self, other):
 		return self.__operator2__(other, operator.__div__)
 
-	def __concat__(self, other):
-		return self.__operator2__(other, operator.__concat__)
+	def __pow__(self, other):
+		return self.__operator2__(other, operator.__pow__)
 
-	def __and__(self, other):
-		return self.__operator2__(other, operator.__and__)
+	def __mod__(self, other):
+		return self.__operator2__(other, operator.__mod__)
 
 	def __gt__(self, other):
 		return self.__operator2__(other, operator.__gt__)

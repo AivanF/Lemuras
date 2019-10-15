@@ -19,16 +19,15 @@ sql_result = """+------+--------------+--------+--------+--------+
 class TestLemurasSql(unittest.TestCase):
 	def test_queries(self):
 		q_create = df1.to_sql_create()
-		df1.types = None
 		q_values = df1.to_sql_values()
 
 		df2 = Table.from_sql_create(q_create)
 		df2.add_sql_values(q_values)
 
-		self.assertEqual(df1.columns, df2.columns)
-		self.assertEqual(df1.rowcnt, df2.rowcnt)
-		self.assertEqual(df1['size'].sum(), df2['size'].sum())
-		self.assertEqual(df1['weight'].sum(), df2['weight'].sum())
+		self.assertEqual(df2.columns, df1.columns)
+		self.assertEqual(df2.rowcnt, df1.rowcnt)
+		self.assertEqual(df2['size'].sum(), df1['size'].sum())
+		self.assertEqual(df2['weight'].sum(), df1['weight'].sum())
 
 	def test_queries_empty(self):
 		df0 = Table(cols, [], 'Empty')
@@ -38,7 +37,7 @@ class TestLemurasSql(unittest.TestCase):
 		df2 = Table.from_sql_create(q_create)
 		df2.add_sql_values(q_values)
 
-		self.assertEqual(df1.columns, df2.columns)
+		self.assertEqual(df2.columns, cols)
 		self.assertEqual(df2.rowcnt, 0)
 
 	def test_load_results(self):

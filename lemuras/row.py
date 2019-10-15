@@ -92,7 +92,7 @@ class Row(object):
 				task = aggfuns[task]
 			else:
 				raise ValueError('Applied function named "{}" does not exist!'.format(task))
-		return task(self.table.rows[self.row_index], *args, **kwargs)
+		return task(self.get_values(), *args, **kwargs)
 
 	def __getattr__(self, attr):
 		if attr in aggfuns:

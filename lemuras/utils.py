@@ -77,7 +77,7 @@ def repr_cell(x, quote_strings=False):
 
 def get_type(data, limit=0):
 	"""Returns data type and max symbols length."""
-	# None Int Float String Mixed
+	# None Int Float String Date dateTime Other Mixed
 	tp = 'n'
 	# varchar length
 	ln = 0
@@ -95,8 +95,10 @@ def get_type(data, limit=0):
 			kind = 't'
 		elif isinstance(el, datetime.date):
 			kind = 'd'
-		else:
+		elif isinstance(el, main_str):
 			kind = 's'
+		else:
+			kind = 'o'
 
 		if tp == 'n':
 			tp = kind

@@ -31,7 +31,6 @@ class Table(object):
 			title = 'NoTitle'
 		self.title = title
 		self.types = None
-		self.idx = 0
 		self._calc_columns()
 
 	def _calc_columns(self):
@@ -160,6 +159,7 @@ class Table(object):
 	@classmethod
 	def from_columns(cls, columns, title='From columns'):
 		res = Table([], [], title)
+		# TODO: add columns as dict support
 		for col in columns:
 			res.add_column(col)
 		return res
@@ -190,7 +190,7 @@ class Table(object):
 			res[self._columns[i]] = self.rows[row_index][i]
 		return res
 
-	def add_row(self, data, strict=True, empty=None, preprocess=False):
+	def add_row(self, data, strict=True, preprocess=False):
 		"""Adds a row to the Table. The argument must be either Row object, list or dictionary."""
 		if iscollection(data) or isinstance(data, Row):
 			if len(data) != self.colcnt:
@@ -206,7 +206,7 @@ class Table(object):
 					if strict:
 						raise ValueError('Table.add_row dict argument does not have key ' + el + '!')
 					else:
-						row.append(empty)
+						row.append(None)
 				else:
 					row.append(parse_value(data[el]) if preprocess else data[el])
 			self.rows.append(row)
@@ -243,7 +243,7 @@ class Table(object):
 			# It's faster, but less powerful
 			# for row in el.rows:
 			#     res.add_row(row)
-		res.title = "Concat"
+		res.title = 'Concat'
 		return res
 
 	def make_index(self, title=None):
@@ -347,9 +347,9 @@ class Table(object):
 				curcol = str(curcol)
 			currow = row[indrow]
 			curval = row[indval]
-			if not curcol in colsels:
+			if curcol not in colsels:
 				colsels.append(curcol)
-			if not currow in rowsels:
+			if currow not in rowsels:
 				rowsels.append(currow)
 			if curcol not in vals:
 				vals[curcol] = {}
@@ -388,6 +388,7 @@ class Table(object):
 
 		# Key index to left keys
 		key2leftcol = [0] * len(keys)
+		# TODO: simplify with column_indices
 		for i in range(tl.colcnt):
 			for j in range(len(keys)):
 				if tl.columns[i] == keys[j]:
@@ -396,6 +397,7 @@ class Table(object):
 
 		# Right keys to key index
 		rightcol2key = []
+		# TODO: simplify with column_indices
 		for i in range(tr.colcnt):
 			tokey = None
 			for j in range(len(keys)):
@@ -694,13 +696,12 @@ class Table(object):
 		for el in tps:
 			ch = el.lower()
 			if (' int' in ch) or (' float' in ch) or (' date' in ch) or (' text' in ch) or ('char(' in ch):
-				# print("- Column is here!")
-				# print(ch)
 				cols.append(list(filter(lalepo, el.split(' ')))[0].replace('`', ''))
 		return Table(cols, [], title)
 
 	@classmethod
 	def from_sql_result(cls, data, empty=None, preprocess=True, title='from SQL res'):
+		data = data.strip()
 		if data[0] == '+':
 			data = data[data.find('\n') + 1:]
 		cols = data[:data.find('\n')]
@@ -713,12 +714,12 @@ class Table(object):
 			cur = ln.split('|')[1:-1]
 			cur = list(map(lambda x: x.strip(), cur))
 			if preprocess:
-					cur = parse_row(cur, empty=empty)
+				cur = parse_row(cur, empty=empty)
 			rows.append(cur)
 		return Table(cols, rows, title)
 
 	def add_sql_values(self, data, empty=None):
-		p = re.compile("(\d+|\'.*?\')\s*,?")
+		p = re.compile("(\\d+|\'.*?\')\\s*,?")
 		def cutstr(x):
 			if len(x) > 1:
 				if x[0] == "'" and x[-1] == "'":
