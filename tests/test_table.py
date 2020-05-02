@@ -106,9 +106,8 @@ class TestLemurasTable(unittest.TestCase):
 			df2['size'] = data
 		self.assertTrue('len' in str(context.exception))
 
-		with self.assertRaises(ValueError) as context:
-			df2['size'] = 'test,sample data'
-		self.assertTrue('Column' in str(context.exception))
+		df2['size'] = 1
+		self.assertEqual((df2['size'] == 1).sum(), df2.rowcnt)
 
 		# It is a different method for adding new column than for replacing and old one
 		# So, it must be checked too

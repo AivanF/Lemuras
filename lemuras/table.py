@@ -90,17 +90,17 @@ class Table(object):
 		Second argument must be either a list or a Column object."""
 		name, ind = (column, self.column_indices[column]) if isinstance(column, main_str) else (self._columns[column], column)
 
-		if isinstance(data, Column):
-			pass
-		elif iscollection(data):
+		if iscollection(data):
 			data = Column(data)
+		if isinstance(data, Column):
+			if len(data) != self.rowcnt:
+				raise ValueError('Table.set_column column length must be equal to table rows count!')
+			for i in range(self.rowcnt):
+				self.rows[i][ind] = data[i]
 		else:
-			raise ValueError('Table.set_column first argument must be either list or Column object!')
-
-		if len(data) != self.rowcnt:
-			raise ValueError('Table.set_column column length must be equal to table rows count!')
-		for i in range(self.rowcnt):
-			self.rows[i][ind] = data[i]
+			# Consider data a primitive value
+			for i in range(self.rowcnt):
+				self.rows[i][ind] = data
 
 	def add_column(self, data, title=None):
 		"""Adds new column. First argument must be either a list or a Column object.
